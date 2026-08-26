@@ -36,6 +36,7 @@
       else v.setAttribute('hidden', '');
     });
     try { localStorage.setItem('az_planner_current_tab', name); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('az-view-shown', { detail: { name } }));
   }
   $$('.az-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 

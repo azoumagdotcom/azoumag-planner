@@ -40,12 +40,19 @@
 
     <main class="az-main">
 
+      <!-- WELCOME -->
       <section class="az-view az-view-active" id="az-view-welcome" role="tabpanel">
         <div class="az-hero">
-          <h2>Welcome to your planner</h2>
-          <p class="az-lead">A calm, offline-first planner that lives in your browser. Every keystroke saves locally. Nothing leaves your device.</p>
+          <h2 id="az-welcome-heading">Welcome to your planner</h2>
+          <p class="az-lead" id="az-welcome-lead">Everything you type saves locally to this browser. Nothing leaves your device.</p>
         </div>
-        <div class="az-grid az-grid-3">
+        <div class="az-grid az-grid-4">
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-goals">0</div><div class="az-kpi-label">Goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-habits">0</div><div class="az-kpi-label">Habits</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-notes">0</div><div class="az-kpi-label">Notes</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-week">W1</div><div class="az-kpi-label">This week</div></div>
+        </div>
+        <div class="az-grid az-grid-3" style="margin-top:24px;">
           <article class="az-card">
             <h3>Inside</h3>
             <ul class="az-list">
@@ -61,8 +68,8 @@
             <ul class="az-list">
               <li>Open Settings, name your planner</li>
               <li>Add your year goals</li>
-              <li>Log habits daily (1 = done, 0 = missed)</li>
-              <li>Plan Monday in Weekly</li>
+              <li>Log habits daily (click to cycle)</li>
+              <li>Plan the month in Monthly</li>
               <li>Export a JSON backup anytime</li>
             </ul>
           </article>
@@ -73,46 +80,157 @@
         </div>
       </section>
 
+      <!-- DASHBOARD -->
       <section class="az-view" id="az-view-dashboard" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Dashboard</h2><span class="az-badge">Phase 2</span></div>
-        <p class="az-muted">KPI cards, habit heat, active goals — coming in the next phase.</p>
+        <div class="az-view-head"><h2>Dashboard</h2></div>
+        <div class="az-grid az-grid-4">
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-goals">0</div><div class="az-kpi-label">Total goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-active-goals">0</div><div class="az-kpi-label">Active goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-habits">0</div><div class="az-kpi-label">Habits tracked</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-longest-streak">0</div><div class="az-kpi-label">Longest streak</div></div>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:24px;">
+          <article class="az-card">
+            <h3>Top goals</h3>
+            <div id="az-dash-top-goals" class="az-empty">Loading…</div>
+          </article>
+          <article class="az-card">
+            <h3>Today's habits</h3>
+            <div id="az-dash-today-habits" class="az-empty">Loading…</div>
+          </article>
+        </div>
       </section>
 
+      <!-- YEAR GOALS -->
       <section class="az-view" id="az-view-year-goals" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Year Goals</h2><span class="az-badge">Phase 2</span></div>
-        <p class="az-muted">Capture 5–12 meaningful goals with deadlines and next actions.</p>
+        <div class="az-view-head"><h2>Year Goals</h2></div>
+        <form class="az-form" id="az-yg-form">
+          <div class="az-form-row">
+            <label style="flex:2 1 260px;">
+              <span>Goal</span>
+              <input type="text" id="az-yg-goal" placeholder="e.g. Launch AZOUMAG Planner v1" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Category</span>
+              <select id="az-yg-category">
+                <option>Career</option><option>Health</option><option>Learning</option>
+                <option>Finance</option><option>Personal</option><option>Family</option>
+              </select>
+            </label>
+            <label style="flex:1 1 120px;">
+              <span>Quarter</span>
+              <select id="az-yg-quarter">
+                <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option><option>Year</option>
+              </select>
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Deadline</span>
+              <input type="date" id="az-yg-deadline" />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Status</span>
+              <select id="az-yg-status">
+                <option>Not Started</option><option>In Progress</option><option>Waiting</option><option>Done</option>
+              </select>
+            </label>
+          </div>
+          <div class="az-form-row">
+            <label style="flex:1 1 260px;">
+              <span>Success metric</span>
+              <input type="text" id="az-yg-metric" placeholder="How will you know?" />
+            </label>
+            <label style="flex:1 1 260px;">
+              <span>Next action</span>
+              <input type="text" id="az-yg-next" placeholder="First concrete step" />
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Add goal</button>
+          </div>
+        </form>
+        <div id="az-yg-list"></div>
       </section>
 
+      <!-- MONTHLY -->
       <section class="az-view" id="az-view-monthly" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Monthly Planner</h2><span class="az-badge">Phase 2</span></div>
-        <p class="az-muted">Priorities, important dates, reflection prompts.</p>
+        <div class="az-view-head"><h2>Monthly Planner</h2></div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-monthly-prev">← Prev</button>
+          <input type="month" id="az-monthly-picker" />
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-monthly-next">Next →</button>
+          <span class="az-muted" id="az-monthly-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:16px;">
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Top priorities (one per line)</span>
+              <textarea id="az-monthly-priorities" rows="6" placeholder="Ship v1&#10;Publish landing page&#10;Weekly reviews on Sundays"></textarea>
+            </label>
+            <label>
+              <span>Important dates (YYYY-MM-DD | note)</span>
+              <textarea id="az-monthly-dates" rows="6" placeholder="2026-08-30 | Ship day&#10;2026-09-05 | Newsletter"></textarea>
+            </label>
+          </div>
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Notes &amp; reflection</span>
+              <textarea id="az-monthly-notes" rows="14" placeholder="What matters most this month? What must go right?"></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-monthly-save">Save month</button>
+        </div>
       </section>
 
+      <!-- HABITS -->
       <section class="az-view" id="az-view-habits" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Habit Tracker</h2><span class="az-badge">Phase 2</span></div>
-        <p class="az-muted">Enter 1 for done, 0 for missed. Streaks + monthly scoring included.</p>
+        <div class="az-view-head"><h2>Habit Tracker</h2></div>
+        <form class="az-form" id="az-h-form">
+          <div class="az-form-row">
+            <label style="flex:2 1 260px;">
+              <span>Habit</span>
+              <input type="text" id="az-h-name" placeholder="e.g. Deep work 90 min" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Category</span>
+              <select id="az-h-category">
+                <option>Health</option><option>Focus</option><option>Learning</option>
+                <option>Family</option><option>Personal</option>
+              </select>
+            </label>
+            <label style="flex:0 1 120px;">
+              <span>Month target</span>
+              <input type="number" id="az-h-target" min="1" max="31" value="20" />
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Add habit</button>
+            <span class="az-muted">Click a square to cycle: empty → done → missed → empty</span>
+          </div>
+        </form>
+        <div id="az-h-grid"></div>
       </section>
 
+      <!-- REMAINING PHASE 3 -->
       <section class="az-view" id="az-view-weekly" role="tabpanel" hidden>
         <div class="az-view-head"><h2>Weekly Planner</h2><span class="az-badge">Phase 3</span></div>
         <p class="az-muted">A weekly reset spread for routine and focus.</p>
       </section>
-
       <section class="az-view" id="az-view-daily" role="tabpanel" hidden>
         <div class="az-view-head"><h2>Daily Planner</h2><span class="az-badge">Phase 3</span></div>
         <p class="az-muted">Reusable daily page — top 3, schedule, gratitude.</p>
       </section>
-
       <section class="az-view" id="az-view-notes" role="tabpanel" hidden>
         <div class="az-view-head"><h2>Notes</h2><span class="az-badge">Phase 3</span></div>
         <p class="az-muted">Loose notes, quotes, references.</p>
       </section>
-
       <section class="az-view" id="az-view-brain-dump" role="tabpanel" hidden>
         <div class="az-view-head"><h2>Brain Dump</h2><span class="az-badge">Phase 3</span></div>
         <p class="az-muted">Offload every open loop before it becomes mental noise.</p>
       </section>
 
+      <!-- SETTINGS -->
       <section class="az-view" id="az-view-settings" role="tabpanel" hidden>
         <div class="az-view-head"><h2>Settings</h2></div>
 
@@ -165,6 +283,11 @@
   </div>
 
   <script src="js/storage.js"></script>
+  <script src="js/welcome.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/year-goals.js"></script>
+  <script src="js/monthly.js"></script>
+  <script src="js/habits.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
