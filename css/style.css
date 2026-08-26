@@ -365,6 +365,89 @@
 #az-planner .az-habit-day[data-today="1"] { box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
 #az-planner .az-habit-delete { margin-left: 10px; }
 
+/* Weekly grid — 7 day columns */
+#az-planner .az-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  overflow-x: auto;
+}
+#az-planner .az-week-day {
+  padding: 12px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  display: flex;
+  flex-direction: column;
+}
+#az-planner .az-week-day h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+#az-planner .az-week-day textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--az-glass-border);
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+#az-planner .az-week-day textarea:focus {
+  outline: none;
+  border-color: rgba(243,112,33,0.6);
+  background: rgba(0,0,0,0.30);
+}
+#az-planner .az-weekly-title { display: inline-flex; gap: 8px; align-items: baseline; }
+
+/* Daily picker */
+#az-planner .az-month-nav input[type="date"] {
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Notes */
+#az-planner .az-note-body {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Brain Dump items */
+#az-planner .az-bd-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  margin-bottom: 8px;
+}
+#az-planner .az-bd-check { display: flex; align-items: center; }
+#az-planner .az-bd-check input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--az-orange);
+  cursor: pointer;
+}
+#az-planner .az-bd-text { flex: 1 1 auto; font-size: 14px; word-break: break-word; }
+#az-planner .az-bd-done .az-bd-text { text-decoration: line-through; opacity: 0.55; }
+#az-planner .az-bd-prio[data-prio="high"] { background: rgba(220,60,60,0.18); border-color: rgba(220,60,60,0.4); color: #ff8a8a; }
+#az-planner .az-bd-prio[data-prio="med"]  { background: rgba(255,200,60,0.15); border-color: rgba(255,200,60,0.4); color: #ffd166; }
+#az-planner .az-bd-prio[data-prio="low"]  { background: rgba(120,180,255,0.15); border-color: rgba(120,180,255,0.35); color: #a8c8ff; }
+
 /* Toast */
 #az-planner .az-toast {
   position: fixed;
@@ -401,6 +484,8 @@
   #az-planner h2 { font-size: 22px; }
   #az-planner .az-kpi-value { font-size: 28px; }
   #az-planner .az-habit-row { flex-direction: column; align-items: flex-start; }
+  #az-planner .az-week-grid { grid-template-columns: 1fr; }
+  #az-planner .az-bd-item { flex-wrap: wrap; }
 }
 
 /* Print */
@@ -415,6 +500,8 @@
   #az-planner .az-card,
   #az-planner .az-kpi,
   #az-planner .az-item,
-  #az-planner .az-habit-row { border: 1px solid #ccc; background: white; }
+  #az-planner .az-habit-row,
+  #az-planner .az-week-day,
+  #az-planner .az-bd-item { border: 1px solid #ccc; background: white; }
   #az-planner .az-kpi-value { color: #F37021; -webkit-text-fill-color: initial; }
 }

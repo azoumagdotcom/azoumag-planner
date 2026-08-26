@@ -212,22 +212,124 @@
         <div id="az-h-grid"></div>
       </section>
 
-      <!-- REMAINING PHASE 3 -->
+      <!-- WEEKLY -->
       <section class="az-view" id="az-view-weekly" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Weekly Planner</h2><span class="az-badge">Phase 3</span></div>
-        <p class="az-muted">A weekly reset spread for routine and focus.</p>
+        <div class="az-view-head"><h2>Weekly Planner</h2></div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-prev">← Prev</button>
+          <span class="az-weekly-title"><strong id="az-weekly-label">—</strong> <span class="az-muted" id="az-weekly-range"></span></span>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-next">Next →</button>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-today">This week</button>
+          <span class="az-muted" id="az-weekly-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-form" style="max-width:none; margin-top:16px;">
+          <label>
+            <span>Weekly focus</span>
+            <textarea id="az-weekly-focus" rows="2" placeholder="What is the one thing this week must move forward?"></textarea>
+          </label>
+        </div>
+        <div class="az-week-grid">
+          <div class="az-week-day"><h4>Monday</h4><textarea id="az-weekly-day-mon" rows="6" placeholder="Tasks, meetings, notes…"></textarea></div>
+          <div class="az-week-day"><h4>Tuesday</h4><textarea id="az-weekly-day-tue" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Wednesday</h4><textarea id="az-weekly-day-wed" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Thursday</h4><textarea id="az-weekly-day-thu" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Friday</h4><textarea id="az-weekly-day-fri" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Saturday</h4><textarea id="az-weekly-day-sat" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Sunday</h4><textarea id="az-weekly-day-sun" rows="6"></textarea></div>
+        </div>
+        <div class="az-form" style="max-width:none; margin-top:16px;">
+          <label>
+            <span>End-of-week reflection</span>
+            <textarea id="az-weekly-reflection" rows="4" placeholder="Wins · lessons · what to change next week"></textarea>
+          </label>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-weekly-save">Save week</button>
+        </div>
       </section>
+
+      <!-- DAILY -->
       <section class="az-view" id="az-view-daily" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Daily Planner</h2><span class="az-badge">Phase 3</span></div>
-        <p class="az-muted">Reusable daily page — top 3, schedule, gratitude.</p>
+        <div class="az-view-head"><h2>Daily Planner</h2></div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-prev">← Prev</button>
+          <input type="date" id="az-daily-picker" />
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-next">Next →</button>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-today">Today</button>
+          <span class="az-muted" id="az-daily-label" style="margin-left:12px;"></span>
+          <span class="az-muted" id="az-daily-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:16px;">
+          <div class="az-form" style="max-width:none;">
+            <h3>Top 3 priorities</h3>
+            <label><span>1</span><input type="text" id="az-daily-top1" placeholder="The most important thing today" /></label>
+            <label><span>2</span><input type="text" id="az-daily-top2" /></label>
+            <label><span>3</span><input type="text" id="az-daily-top3" /></label>
+            <label>
+              <span>Schedule (HH:MM | task)</span>
+              <textarea id="az-daily-schedule" rows="10" placeholder="09:00 | Deep work&#10;12:30 | Lunch&#10;15:00 | Review PRs"></textarea>
+            </label>
+          </div>
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Gratitude</span>
+              <textarea id="az-daily-gratitude" rows="5" placeholder="Three things you appreciated today"></textarea>
+            </label>
+            <label>
+              <span>Reflection</span>
+              <textarea id="az-daily-reflection" rows="9" placeholder="What worked. What didn't. What to do tomorrow."></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-daily-save">Save day</button>
+        </div>
       </section>
+
+      <!-- NOTES -->
       <section class="az-view" id="az-view-notes" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Notes</h2><span class="az-badge">Phase 3</span></div>
-        <p class="az-muted">Loose notes, quotes, references.</p>
+        <div class="az-view-head"><h2>Notes</h2><span class="az-muted">·</span><span class="az-muted"><span id="az-notes-count">0</span> saved</span></div>
+        <form class="az-form" id="az-notes-form" style="max-width:none;">
+          <label>
+            <span>Title</span>
+            <input type="text" id="az-notes-title" placeholder="Note title" />
+          </label>
+          <label>
+            <span>Body</span>
+            <textarea id="az-notes-body" rows="6" placeholder="Anything you want to keep — quotes, references, thoughts."></textarea>
+          </label>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary" id="az-notes-submit">Save note</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-notes-cancel" hidden>Cancel edit</button>
+          </div>
+        </form>
+        <div id="az-notes-list"></div>
       </section>
+
+      <!-- BRAIN DUMP -->
       <section class="az-view" id="az-view-brain-dump" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Brain Dump</h2><span class="az-badge">Phase 3</span></div>
-        <p class="az-muted">Offload every open loop before it becomes mental noise.</p>
+        <div class="az-view-head"><h2>Brain Dump</h2><span class="az-muted">·</span><span class="az-muted"><span id="az-bd-open">0</span> open</span></div>
+        <form class="az-form" id="az-bd-form" style="max-width:none;">
+          <div class="az-form-row">
+            <label style="flex:3 1 260px;">
+              <span>Offload it</span>
+              <input type="text" id="az-bd-text" placeholder="Everything on your mind — one line at a time" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Priority</span>
+              <select id="az-bd-priority">
+                <option value="high">High</option>
+                <option value="med" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Dump it</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-bd-clear-done">Clear completed</button>
+          </div>
+        </form>
+        <div id="az-bd-list"></div>
       </section>
 
       <!-- SETTINGS -->
@@ -288,6 +390,10 @@
   <script src="js/year-goals.js"></script>
   <script src="js/monthly.js"></script>
   <script src="js/habits.js"></script>
+  <script src="js/weekly.js"></script>
+  <script src="js/daily.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/brain-dump.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
