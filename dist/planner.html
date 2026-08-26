@@ -1,0 +1,2746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AZOUMAG Planner — the ultimate offline-first web planner. Goals, habits, weekly focus, brain dump. Works entirely in your browser." />
+  <meta name="theme-color" content="#1D2240" />
+  <title>AZOUMAG Planner — The Ultimate Online Solutions</title>
+  <style>
+/* AZOUMAG Planner — All styles scoped under #az-planner (AZOUMAG rule) */
+
+#az-planner {
+  --az-orange: #F37021;
+  --az-orange-soft: #ff8f4d;
+  --az-navy: #1D2240;
+  --az-navy-deep: #12162B;
+  --az-navy-light: #3D4573;
+  --az-offwhite: #FFF4EC;
+  --az-black: #111111;
+
+  --az-glass-bg: rgba(255, 255, 255, 0.06);
+  --az-glass-border: rgba(255, 255, 255, 0.12);
+  --az-glass-blur: 16px;
+
+  --az-radius: 12px;
+  --az-radius-lg: 16px;
+  --az-gap: 20px;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: var(--az-offwhite);
+  min-height: 100vh;
+  background: var(--az-navy);
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+#az-planner * { box-sizing: border-box; }
+
+/* Aurora background */
+#az-planner::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 40% at 20% 20%, rgba(243, 112, 33, 0.20), transparent 60%),
+    radial-gradient(50% 40% at 80% 80%, rgba(61, 69, 115, 0.55), transparent 60%),
+    radial-gradient(40% 30% at 50% 100%, rgba(243, 112, 33, 0.10), transparent 60%);
+  animation: az-aurora 22s ease-in-out infinite alternate;
+}
+@keyframes az-aurora {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(3%, -3%) scale(1.08); }
+}
+
+/* Header */
+#az-planner .az-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  background: var(--az-glass-bg);
+  backdrop-filter: blur(var(--az-glass-blur));
+  -webkit-backdrop-filter: blur(var(--az-glass-blur));
+  border-bottom: 1px solid var(--az-glass-border);
+  flex-wrap: wrap;
+}
+#az-planner .az-brand { display: flex; gap: 14px; align-items: center; }
+#az-planner .az-logo {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: var(--az-radius);
+  background: linear-gradient(135deg, var(--az-orange), var(--az-orange-soft));
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 4px 20px rgba(243, 112, 33, 0.4);
+  letter-spacing: 0.5px;
+}
+#az-planner h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--az-orange), #ffb27a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#az-planner .az-slogan { margin: 0; font-size: 12px; opacity: 0.7; }
+#az-planner .az-shop-info { text-align: right; font-size: 13px; opacity: 0.8; }
+#az-planner .az-shop-name { display: block; font-weight: 600; }
+#az-planner .az-date { display: block; opacity: 0.6; font-size: 12px; }
+
+/* Tabs */
+#az-planner .az-tabs {
+  display: flex; gap: 4px;
+  padding: 12px 32px;
+  background: var(--az-glass-bg);
+  border-bottom: 1px solid var(--az-glass-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+#az-planner .az-tab {
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--az-offwhite);
+  opacity: 0.6;
+  cursor: pointer;
+  border-radius: var(--az-radius);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+#az-planner .az-tab:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+#az-planner .az-tab-active {
+  opacity: 1;
+  background: linear-gradient(135deg, rgba(243,112,33,0.20), rgba(243,112,33,0.05));
+  border-color: rgba(243,112,33,0.35);
+  color: var(--az-offwhite);
+}
+
+/* Main */
+#az-planner .az-main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+#az-planner .az-view { display: none; animation: az-fade 0.25s ease; }
+#az-planner .az-view-active { display: block; }
+@keyframes az-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+#az-planner .az-view-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+#az-planner h2 { margin: 0; font-size: 26px; font-weight: 700; }
+#az-planner h3 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+#az-planner .az-muted { opacity: 0.6; font-size: 14px; }
+#az-planner .az-lead { font-size: 16px; opacity: 0.85; max-width: 640px; }
+
+/* Hero */
+#az-planner .az-hero { margin-bottom: 24px; }
+
+/* Grid */
+#az-planner .az-grid { display: grid; gap: var(--az-gap); }
+#az-planner .az-grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+#az-planner .az-grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+#az-planner .az-grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+/* Cards */
+#az-planner .az-card {
+  padding: 24px;
+  background: var(--az-glass-bg);
+  backdrop-filter: blur(var(--az-glass-blur));
+  -webkit-backdrop-filter: blur(var(--az-glass-blur));
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+}
+#az-planner .az-list { margin: 0; padding-left: 18px; font-size: 14px; opacity: 0.85; }
+#az-planner .az-list li { margin-bottom: 4px; }
+
+/* KPI cards */
+#az-planner .az-kpi {
+  padding: 20px 22px;
+  background: var(--az-glass-bg);
+  backdrop-filter: blur(var(--az-glass-blur));
+  -webkit-backdrop-filter: blur(var(--az-glass-blur));
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+}
+#az-planner .az-kpi-value {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  background: linear-gradient(90deg, var(--az-orange), #ffb27a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#az-planner .az-kpi-label {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* Badge + chips */
+#az-planner .az-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(243,112,33,0.15);
+  border: 1px solid rgba(243,112,33,0.35);
+  color: var(--az-orange);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+#az-planner .az-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--az-glass-border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+#az-planner .az-chip-status[data-status="Not Started"] { background: rgba(255,255,255,0.08); }
+#az-planner .az-chip-status[data-status="In Progress"] { background: rgba(243,112,33,0.18); border-color: rgba(243,112,33,0.4); color: var(--az-orange); }
+#az-planner .az-chip-status[data-status="Waiting"]     { background: rgba(255,200,60,0.15); border-color: rgba(255,200,60,0.4); color: #ffd166; }
+#az-planner .az-chip-status[data-status="Done"]        { background: rgba(80,200,120,0.18); border-color: rgba(80,200,120,0.4); color: #7ed6a0; }
+
+/* Buttons */
+#az-planner .az-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--az-radius);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+  text-align: center;
+}
+#az-planner .az-btn-sm { padding: 6px 12px; font-size: 12px; }
+#az-planner .az-btn-primary {
+  background: linear-gradient(135deg, var(--az-orange), var(--az-orange-soft));
+  color: white;
+  box-shadow: 0 4px 20px rgba(243,112,33,0.30);
+}
+#az-planner .az-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(243,112,33,0.50); }
+#az-planner .az-btn-ghost {
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  color: var(--az-offwhite);
+}
+#az-planner .az-btn-ghost:hover { background: rgba(255,255,255,0.10); }
+#az-planner .az-btn-danger {
+  background: #d33;
+  color: white;
+}
+#az-planner .az-btn-danger:hover { background: #b52a2a; }
+
+/* Forms */
+#az-planner .az-form {
+  max-width: 520px;
+  padding: 24px;
+  background: var(--az-glass-bg);
+  backdrop-filter: blur(var(--az-glass-blur));
+  -webkit-backdrop-filter: blur(var(--az-glass-blur));
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+  margin-bottom: 20px;
+}
+#az-planner .az-form label { display: block; margin-bottom: 14px; }
+#az-planner .az-form label span { display: block; font-size: 13px; opacity: 0.7; margin-bottom: 6px; }
+#az-planner .az-form input,
+#az-planner .az-form select,
+#az-planner .az-form textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--az-glass-border);
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 14px;
+}
+#az-planner .az-form textarea { resize: vertical; min-height: 90px; }
+#az-planner .az-form input:focus,
+#az-planner .az-form select:focus,
+#az-planner .az-form textarea:focus {
+  outline: none;
+  border-color: rgba(243,112,33,0.6);
+  background: rgba(0,0,0,0.30);
+}
+#az-planner .az-form-row { display: flex; flex-wrap: wrap; gap: 14px; }
+#az-planner .az-form-row label { flex: 1 1 200px; margin-bottom: 0; }
+#az-planner .az-form-actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+#az-planner .az-backup-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+#az-planner .az-backup-info { font-size: 13px; opacity: 0.7; }
+#az-planner .az-danger-zone { border-color: rgba(220,60,60,0.35); }
+
+/* Empty state */
+#az-planner .az-empty {
+  padding: 24px;
+  border: 1px dashed var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+  color: var(--az-offwhite);
+  opacity: 0.6;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* CRUD item (goals, notes, brain dump…) */
+#az-planner .az-item {
+  padding: 18px 20px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+  margin-bottom: 12px;
+}
+#az-planner .az-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+#az-planner .az-item-title { margin: 0; font-weight: 600; font-size: 15px; }
+#az-planner .az-item-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+#az-planner .az-item-body { margin: 10px 0; font-size: 14px; opacity: 0.85; }
+#az-planner .az-item-body p { margin: 4px 0; }
+#az-planner .az-item-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+#az-planner .az-item-actions input[type="range"] { flex: 1 1 160px; }
+#az-planner .az-item-actions select {
+  padding: 6px 10px; font-size: 13px;
+  background: rgba(0,0,0,0.20); color: var(--az-offwhite);
+  border: 1px solid var(--az-glass-border); border-radius: var(--az-radius);
+}
+
+/* Progress bar */
+#az-planner .az-progress {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 10px 0 4px;
+}
+#az-planner .az-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--az-orange), var(--az-orange-soft));
+  transition: width 0.25s ease;
+}
+
+/* Month nav */
+#az-planner .az-month-nav {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+}
+#az-planner .az-month-nav input[type="month"] {
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Habits */
+#az-planner .az-habit-row {
+  display: flex; gap: 14px; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+#az-planner .az-habit-info { min-width: 180px; }
+#az-planner .az-habit-name { font-weight: 600; font-size: 15px; }
+#az-planner .az-habit-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; opacity: 0.75; margin-top: 4px; flex-wrap: wrap; }
+#az-planner .az-habit-days { display: flex; gap: 4px; }
+#az-planner .az-habit-day {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--az-glass-border);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s ease;
+}
+#az-planner .az-habit-day:hover { transform: scale(1.15); }
+#az-planner .az-habit-day[data-state="done"] { background: linear-gradient(135deg, var(--az-orange), var(--az-orange-soft)); border-color: transparent; }
+#az-planner .az-habit-day[data-state="miss"] { background: rgba(220,60,60,0.35); border-color: rgba(220,60,60,0.5); }
+#az-planner .az-habit-day[data-today="1"] { box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+#az-planner .az-habit-delete { margin-left: 10px; }
+
+/* Weekly grid — 7 day columns */
+#az-planner .az-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  overflow-x: auto;
+}
+#az-planner .az-week-day {
+  padding: 12px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  display: flex;
+  flex-direction: column;
+}
+#az-planner .az-week-day h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+#az-planner .az-week-day textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--az-glass-border);
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+#az-planner .az-week-day textarea:focus {
+  outline: none;
+  border-color: rgba(243,112,33,0.6);
+  background: rgba(0,0,0,0.30);
+}
+#az-planner .az-weekly-title { display: inline-flex; gap: 8px; align-items: baseline; }
+
+/* Daily picker */
+#az-planner .az-month-nav input[type="date"] {
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.20);
+  color: var(--az-offwhite);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Notes */
+#az-planner .az-note-body {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Brain Dump items */
+#az-planner .az-bd-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--az-glass-bg);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  margin-bottom: 8px;
+}
+#az-planner .az-bd-check { display: flex; align-items: center; }
+#az-planner .az-bd-check input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--az-orange);
+  cursor: pointer;
+}
+#az-planner .az-bd-text { flex: 1 1 auto; font-size: 14px; word-break: break-word; }
+#az-planner .az-bd-done .az-bd-text { text-decoration: line-through; opacity: 0.55; }
+#az-planner .az-bd-prio[data-prio="high"] { background: rgba(220,60,60,0.18); border-color: rgba(220,60,60,0.4); color: #ff8a8a; }
+#az-planner .az-bd-prio[data-prio="med"]  { background: rgba(255,200,60,0.15); border-color: rgba(255,200,60,0.4); color: #ffd166; }
+#az-planner .az-bd-prio[data-prio="low"]  { background: rgba(120,180,255,0.15); border-color: rgba(120,180,255,0.35); color: #a8c8ff; }
+
+/* Toast */
+#az-planner .az-toast {
+  position: fixed;
+  top: 20px; left: 50%;
+  transform: translate(-50%, -80px);
+  padding: 12px 24px;
+  background: var(--az-glass-bg);
+  backdrop-filter: blur(var(--az-glass-blur));
+  -webkit-backdrop-filter: blur(var(--az-glass-blur));
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  font-size: 14px;
+  color: var(--az-offwhite);
+}
+#az-planner .az-toast-show { transform: translate(-50%, 0); }
+#az-planner .az-toast-error { border-color: rgba(220,60,60,0.5); }
+
+/* Footer */
+#az-planner .az-footer {
+  padding: 20px;
+  text-align: center;
+  opacity: 0.5;
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  #az-planner .az-header { padding: 16px 20px; }
+  #az-planner .az-tabs { padding: 8px 16px; }
+  #az-planner .az-main { padding: 20px 16px; }
+  #az-planner h1 { font-size: 18px; }
+  #az-planner h2 { font-size: 22px; }
+  #az-planner .az-kpi-value { font-size: 28px; }
+  #az-planner .az-habit-row { flex-direction: column; align-items: flex-start; }
+  #az-planner .az-week-grid { grid-template-columns: 1fr; }
+  #az-planner .az-bd-item { flex-wrap: wrap; }
+}
+
+/* Print */
+@media print {
+  #az-planner { background: white; color: black; }
+  #az-planner::before,
+  #az-planner .az-header,
+  #az-planner .az-tabs,
+  #az-planner .az-footer,
+  #az-planner .az-toast { display: none; }
+  #az-planner .az-view { display: block !important; page-break-after: always; }
+  #az-planner[data-print-section] .az-view { display: none !important; page-break-after: auto; }
+  #az-planner[data-print-section="monthly"] #az-view-monthly,
+  #az-planner[data-print-section="weekly"]  #az-view-weekly,
+  #az-planner[data-print-section="daily"]   #az-view-daily,
+  #az-planner[data-print-section="year-goals"] #az-view-year-goals,
+  #az-planner[data-print-section="habits"]  #az-view-habits,
+  #az-planner[data-print-section="notes"]   #az-view-notes,
+  #az-planner[data-print-section="brain-dump"] #az-view-brain-dump { display: block !important; }
+  #az-planner .az-view-head button,
+  #az-planner .az-form-actions,
+  #az-planner .az-item-actions,
+  #az-planner .az-backup-actions { display: none !important; }
+  #az-planner .az-card,
+  #az-planner .az-kpi,
+  #az-planner .az-item,
+  #az-planner .az-habit-row,
+  #az-planner .az-week-day,
+  #az-planner .az-bd-item { border: 1px solid #ccc; background: white; }
+  #az-planner .az-kpi-value { color: #F37021; -webkit-text-fill-color: initial; }
+}
+
+</style>
+</head>
+<body>
+  <div id="az-planner">
+
+    <header class="az-header">
+      <div class="az-brand">
+        <span class="az-logo" aria-hidden="true">AZ</span>
+        <div>
+          <h1>AZOUMAG Planner</h1>
+          <p class="az-slogan">Plan calmly. Reset weekly. Ship consistently.</p>
+        </div>
+      </div>
+      <div class="az-shop-info">
+        <span class="az-shop-name" id="az-shop-name">Your Planner</span>
+        <span class="az-date" id="az-today"></span>
+      </div>
+    </header>
+
+    <nav class="az-tabs" role="tablist" aria-label="Planner sections">
+      <button class="az-tab az-tab-active" data-tab="welcome" role="tab" aria-selected="true">Welcome</button>
+      <button class="az-tab" data-tab="dashboard" role="tab" aria-selected="false">Dashboard</button>
+      <button class="az-tab" data-tab="year-goals" role="tab" aria-selected="false">Year Goals</button>
+      <button class="az-tab" data-tab="monthly" role="tab" aria-selected="false">Monthly</button>
+      <button class="az-tab" data-tab="habits" role="tab" aria-selected="false">Habits</button>
+      <button class="az-tab" data-tab="weekly" role="tab" aria-selected="false">Weekly</button>
+      <button class="az-tab" data-tab="daily" role="tab" aria-selected="false">Daily</button>
+      <button class="az-tab" data-tab="notes" role="tab" aria-selected="false">Notes</button>
+      <button class="az-tab" data-tab="brain-dump" role="tab" aria-selected="false">Brain Dump</button>
+      <button class="az-tab" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+    </nav>
+
+    <main class="az-main">
+
+      <!-- WELCOME -->
+      <section class="az-view az-view-active" id="az-view-welcome" role="tabpanel">
+        <div class="az-hero">
+          <h2 id="az-welcome-heading">Welcome to your planner</h2>
+          <p class="az-lead" id="az-welcome-lead">Everything you type saves locally to this browser. Nothing leaves your device.</p>
+        </div>
+        <div class="az-grid az-grid-4">
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-goals">0</div><div class="az-kpi-label">Goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-habits">0</div><div class="az-kpi-label">Habits</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-notes">0</div><div class="az-kpi-label">Notes</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-welcome-week">W1</div><div class="az-kpi-label">This week</div></div>
+        </div>
+        <div class="az-grid az-grid-3" style="margin-top:24px;">
+          <article class="az-card">
+            <h3>Inside</h3>
+            <ul class="az-list">
+              <li>Dashboard with KPI at a glance</li>
+              <li>Year goals with progress + deadlines</li>
+              <li>Monthly, weekly, daily spreads</li>
+              <li>Habit tracker with streaks</li>
+              <li>Notes + brain dump for offloading</li>
+            </ul>
+          </article>
+          <article class="az-card">
+            <h3>How to use</h3>
+            <ul class="az-list">
+              <li>Open Settings, name your planner</li>
+              <li>Add your year goals</li>
+              <li>Log habits daily (click to cycle)</li>
+              <li>Plan the month in Monthly</li>
+              <li>Export a JSON backup anytime</li>
+            </ul>
+          </article>
+          <article class="az-card">
+            <h3>Design direction</h3>
+            <p>AZOUMAG editorial palette, glassmorphism, ADHD-friendly clarity. Printable, easy to customize, no clutter.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="az-view" id="az-view-dashboard" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Dashboard</h2></div>
+        <div class="az-grid az-grid-4">
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-goals">0</div><div class="az-kpi-label">Total goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-active-goals">0</div><div class="az-kpi-label">Active goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-habits">0</div><div class="az-kpi-label">Habits tracked</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-longest-streak">0</div><div class="az-kpi-label">Longest streak</div></div>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:24px;">
+          <article class="az-card">
+            <h3>Top goals</h3>
+            <div id="az-dash-top-goals" class="az-empty">Loading…</div>
+          </article>
+          <article class="az-card">
+            <h3>Today's habits</h3>
+            <div id="az-dash-today-habits" class="az-empty">Loading…</div>
+          </article>
+        </div>
+      </section>
+
+      <!-- YEAR GOALS -->
+      <section class="az-view" id="az-view-year-goals" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Year Goals</h2></div>
+        <form class="az-form" id="az-yg-form">
+          <div class="az-form-row">
+            <label style="flex:2 1 260px;">
+              <span>Goal</span>
+              <input type="text" id="az-yg-goal" placeholder="e.g. Launch AZOUMAG Planner v1" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Category</span>
+              <select id="az-yg-category">
+                <option>Career</option><option>Health</option><option>Learning</option>
+                <option>Finance</option><option>Personal</option><option>Family</option>
+              </select>
+            </label>
+            <label style="flex:1 1 120px;">
+              <span>Quarter</span>
+              <select id="az-yg-quarter">
+                <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option><option>Year</option>
+              </select>
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Deadline</span>
+              <input type="date" id="az-yg-deadline" />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Status</span>
+              <select id="az-yg-status">
+                <option>Not Started</option><option>In Progress</option><option>Waiting</option><option>Done</option>
+              </select>
+            </label>
+          </div>
+          <div class="az-form-row">
+            <label style="flex:1 1 260px;">
+              <span>Success metric</span>
+              <input type="text" id="az-yg-metric" placeholder="How will you know?" />
+            </label>
+            <label style="flex:1 1 260px;">
+              <span>Next action</span>
+              <input type="text" id="az-yg-next" placeholder="First concrete step" />
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Add goal</button>
+          </div>
+        </form>
+        <div id="az-yg-list"></div>
+      </section>
+
+      <!-- MONTHLY -->
+      <section class="az-view" id="az-view-monthly" role="tabpanel" hidden>
+        <div class="az-view-head">
+          <h2>Monthly Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="monthly" style="margin-left:auto;">Print</button>
+        </div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-monthly-prev">← Prev</button>
+          <input type="month" id="az-monthly-picker" />
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-monthly-next">Next →</button>
+          <span class="az-muted" id="az-monthly-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:16px;">
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Top priorities (one per line)</span>
+              <textarea id="az-monthly-priorities" rows="6" placeholder="Ship v1&#10;Publish landing page&#10;Weekly reviews on Sundays"></textarea>
+            </label>
+            <label>
+              <span>Important dates (YYYY-MM-DD | note)</span>
+              <textarea id="az-monthly-dates" rows="6" placeholder="2026-08-30 | Ship day&#10;2026-09-05 | Newsletter"></textarea>
+            </label>
+          </div>
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Notes &amp; reflection</span>
+              <textarea id="az-monthly-notes" rows="14" placeholder="What matters most this month? What must go right?"></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-monthly-save">Save month</button>
+        </div>
+      </section>
+
+      <!-- HABITS -->
+      <section class="az-view" id="az-view-habits" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Habit Tracker</h2></div>
+        <form class="az-form" id="az-h-form">
+          <div class="az-form-row">
+            <label style="flex:2 1 260px;">
+              <span>Habit</span>
+              <input type="text" id="az-h-name" placeholder="e.g. Deep work 90 min" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Category</span>
+              <select id="az-h-category">
+                <option>Health</option><option>Focus</option><option>Learning</option>
+                <option>Family</option><option>Personal</option>
+              </select>
+            </label>
+            <label style="flex:0 1 120px;">
+              <span>Month target</span>
+              <input type="number" id="az-h-target" min="1" max="31" value="20" />
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Add habit</button>
+            <span class="az-muted">Click a square to cycle: empty → done → missed → empty</span>
+          </div>
+        </form>
+        <div id="az-h-grid"></div>
+      </section>
+
+      <!-- WEEKLY -->
+      <section class="az-view" id="az-view-weekly" role="tabpanel" hidden>
+        <div class="az-view-head">
+          <h2>Weekly Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="weekly" style="margin-left:auto;">Print</button>
+        </div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-prev">← Prev</button>
+          <span class="az-weekly-title"><strong id="az-weekly-label">—</strong> <span class="az-muted" id="az-weekly-range"></span></span>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-next">Next →</button>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-today">This week</button>
+          <span class="az-muted" id="az-weekly-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-form" style="max-width:none; margin-top:16px;">
+          <label>
+            <span>Weekly focus</span>
+            <textarea id="az-weekly-focus" rows="2" placeholder="What is the one thing this week must move forward?"></textarea>
+          </label>
+        </div>
+        <div class="az-week-grid">
+          <div class="az-week-day"><h4>Monday</h4><textarea id="az-weekly-day-mon" rows="6" placeholder="Tasks, meetings, notes…"></textarea></div>
+          <div class="az-week-day"><h4>Tuesday</h4><textarea id="az-weekly-day-tue" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Wednesday</h4><textarea id="az-weekly-day-wed" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Thursday</h4><textarea id="az-weekly-day-thu" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Friday</h4><textarea id="az-weekly-day-fri" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Saturday</h4><textarea id="az-weekly-day-sat" rows="6"></textarea></div>
+          <div class="az-week-day"><h4>Sunday</h4><textarea id="az-weekly-day-sun" rows="6"></textarea></div>
+        </div>
+        <div class="az-form" style="max-width:none; margin-top:16px;">
+          <label>
+            <span>End-of-week reflection</span>
+            <textarea id="az-weekly-reflection" rows="4" placeholder="Wins · lessons · what to change next week"></textarea>
+          </label>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-weekly-save">Save week</button>
+        </div>
+      </section>
+
+      <!-- DAILY -->
+      <section class="az-view" id="az-view-daily" role="tabpanel" hidden>
+        <div class="az-view-head">
+          <h2>Daily Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="daily" style="margin-left:auto;">Print</button>
+        </div>
+        <div class="az-month-nav">
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-prev">← Prev</button>
+          <input type="date" id="az-daily-picker" />
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-next">Next →</button>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-today">Today</button>
+          <span class="az-muted" id="az-daily-label" style="margin-left:12px;"></span>
+          <span class="az-muted" id="az-daily-saved" style="margin-left:auto;"></span>
+        </div>
+        <div class="az-grid az-grid-2" style="margin-top:16px;">
+          <div class="az-form" style="max-width:none;">
+            <h3>Top 3 priorities</h3>
+            <label><span>1</span><input type="text" id="az-daily-top1" placeholder="The most important thing today" /></label>
+            <label><span>2</span><input type="text" id="az-daily-top2" /></label>
+            <label><span>3</span><input type="text" id="az-daily-top3" /></label>
+            <label>
+              <span>Schedule (HH:MM | task)</span>
+              <textarea id="az-daily-schedule" rows="10" placeholder="09:00 | Deep work&#10;12:30 | Lunch&#10;15:00 | Review PRs"></textarea>
+            </label>
+          </div>
+          <div class="az-form" style="max-width:none;">
+            <label>
+              <span>Gratitude</span>
+              <textarea id="az-daily-gratitude" rows="5" placeholder="Three things you appreciated today"></textarea>
+            </label>
+            <label>
+              <span>Reflection</span>
+              <textarea id="az-daily-reflection" rows="9" placeholder="What worked. What didn't. What to do tomorrow."></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="az-form-actions" style="margin-top:16px;">
+          <button type="button" class="az-btn az-btn-primary" id="az-daily-save">Save day</button>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="az-view" id="az-view-notes" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Notes</h2><span class="az-muted">·</span><span class="az-muted"><span id="az-notes-count">0</span> saved</span></div>
+        <form class="az-form" id="az-notes-form" style="max-width:none;">
+          <label>
+            <span>Title</span>
+            <input type="text" id="az-notes-title" placeholder="Note title" />
+          </label>
+          <label>
+            <span>Body</span>
+            <textarea id="az-notes-body" rows="6" placeholder="Anything you want to keep — quotes, references, thoughts."></textarea>
+          </label>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary" id="az-notes-submit">Save note</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-notes-cancel" hidden>Cancel edit</button>
+          </div>
+        </form>
+        <div id="az-notes-list"></div>
+      </section>
+
+      <!-- BRAIN DUMP -->
+      <section class="az-view" id="az-view-brain-dump" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Brain Dump</h2><span class="az-muted">·</span><span class="az-muted"><span id="az-bd-open">0</span> open</span></div>
+        <form class="az-form" id="az-bd-form" style="max-width:none;">
+          <div class="az-form-row">
+            <label style="flex:3 1 260px;">
+              <span>Offload it</span>
+              <input type="text" id="az-bd-text" placeholder="Everything on your mind — one line at a time" required />
+            </label>
+            <label style="flex:1 1 140px;">
+              <span>Priority</span>
+              <select id="az-bd-priority">
+                <option value="high">High</option>
+                <option value="med" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </label>
+          </div>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Dump it</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-bd-clear-done">Clear completed</button>
+          </div>
+        </form>
+        <div id="az-bd-list"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="az-view" id="az-view-settings" role="tabpanel" hidden>
+        <div class="az-view-head"><h2>Settings</h2></div>
+
+        <form class="az-form" id="az-settings-form">
+          <label>
+            <span>Planner name</span>
+            <input type="text" id="az-set-shop" placeholder="e.g. Omar's Planner" />
+          </label>
+          <label>
+            <span>Default year</span>
+            <input type="number" id="az-set-year" min="2020" max="2100" />
+          </label>
+          <label>
+            <span>Theme</span>
+            <select id="az-set-theme">
+              <option value="base">Base — Deep Navy / Orange</option>
+            </select>
+          </label>
+          <div class="az-form-actions">
+            <button type="submit" class="az-btn az-btn-primary">Save settings</button>
+          </div>
+        </form>
+
+        <div class="az-form">
+          <h3>Product presets</h3>
+          <p class="az-muted">Load a curated starter set — goals, habits, monthly focus, matching theme. Merge adds to your data; replace wipes and rebuilds.</p>
+          <div class="az-form-row">
+            <label style="flex:2 1 260px;">
+              <span>Preset</span>
+              <select id="az-preset-select"></select>
+            </label>
+            <div style="align-self:flex-end;">
+              <button type="button" class="az-btn az-btn-primary" id="az-preset-apply">Apply preset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="az-form az-backup">
+          <h3>Backup &amp; Restore</h3>
+          <div class="az-backup-info" id="az-backup-info">Last backup: never</div>
+          <div class="az-backup-actions">
+            <button type="button" class="az-btn az-btn-primary" id="az-backup-export">Download backup</button>
+            <label class="az-btn az-btn-ghost" for="az-backup-file">Restore from file</label>
+            <input type="file" id="az-backup-file" accept=".json,application/json" hidden />
+          </div>
+        </div>
+
+        <div class="az-form">
+          <h3>Export &amp; Print</h3>
+          <p class="az-muted">CSV files open in Excel · Numbers · Google Sheets. Print outputs a clean paper layout.</p>
+          <div class="az-backup-actions">
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="year-goals">Year goals CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="habits">Habits CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="notes">Notes CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="brain-dump">Brain dump CSV</button>
+            <button type="button" class="az-btn az-btn-primary" data-print-all="1">Print full planner</button>
+          </div>
+        </div>
+
+        <div class="az-form az-danger-zone">
+          <h3>Danger zone</h3>
+          <div class="az-form-actions">
+            <button type="button" class="az-btn az-btn-danger" id="az-reset-data">Reset all planner data</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="az-footer">
+      AZOUMAG Planner · The Ultimate Online Solutions · <span id="az-version">v0.1.0</span>
+    </footer>
+
+    <div class="az-toast" id="az-toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+/* AZOUMAG Planner — Storage layer (LocalStorage + JSON backup/restore) */
+(function (global) {
+  'use strict';
+
+  const APP_SIGNATURE = 'AZOUMAG PLANNER';
+  const SCHEMA_VERSION = 1;
+
+  const K = {
+    settings:   'az_planner_settings',
+    yearGoals:  'az_planner_year_goals',
+    habits:     'az_planner_habits',
+    monthly:    'az_planner_monthly',
+    weekly:     'az_planner_weekly',
+    daily:      'az_planner_daily',
+    notes:      'az_planner_notes',
+    brainDump:  'az_planner_brain_dump',
+    meta:       'az_planner_meta',
+  };
+
+  function read(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed === null ? fallback : parsed;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function write(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  const defaultSettings = () => ({
+    plannerName: 'Your Planner',
+    year: new Date().getFullYear(),
+    theme: 'base',
+    createdAt: new Date().toISOString(),
+  });
+
+  const AZStorage = {
+    // Settings
+    getSettings() { return read(K.settings, defaultSettings()); },
+    saveSettings(s) { write(K.settings, s); this.touchMeta(); },
+
+    // Year Goals — [{id, goal, category, quarter, deadline, status, progress, successMetric, nextAction}]
+    getYearGoals() { return read(K.yearGoals, []); },
+    saveYearGoals(list) { write(K.yearGoals, list); this.touchMeta(); },
+
+    // Habits — [{id, habit, category, target, values: {'2026-08-26': 1, ...}}]
+    getHabits() { return read(K.habits, []); },
+    saveHabits(list) { write(K.habits, list); this.touchMeta(); },
+
+    // Monthly — {'2026-08': {priorities: [], notes: '', importantDates: []}}
+    getMonthly() { return read(K.monthly, {}); },
+    saveMonthly(map) { write(K.monthly, map); this.touchMeta(); },
+
+    // Weekly — {'2026-W35': {focus: '', mon: [], tue: [], ...}}
+    getWeekly() { return read(K.weekly, {}); },
+    saveWeekly(map) { write(K.weekly, map); this.touchMeta(); },
+
+    // Daily — {'2026-08-26': {topThree: [], schedule: [], gratitude: '', reflection: ''}}
+    getDaily() { return read(K.daily, {}); },
+    saveDaily(map) { write(K.daily, map); this.touchMeta(); },
+
+    // Notes — [{id, title, body, updatedAt}]
+    getNotes() { return read(K.notes, []); },
+    saveNotes(list) { write(K.notes, list); this.touchMeta(); },
+
+    // Brain Dump — [{id, text, priority, createdAt}]
+    getBrainDump() { return read(K.brainDump, []); },
+    saveBrainDump(list) { write(K.brainDump, list); this.touchMeta(); },
+
+    // Meta (last modified, last backup)
+    getMeta() { return read(K.meta, { updatedAt: null, lastBackupAt: null }); },
+    touchMeta() {
+      const meta = this.getMeta();
+      meta.updatedAt = new Date().toISOString();
+      write(K.meta, meta);
+    },
+    markBackupDone() {
+      const meta = this.getMeta();
+      meta.lastBackupAt = new Date().toISOString();
+      write(K.meta, meta);
+    },
+
+    // ID generator
+    newId(prefix) {
+      return (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+    },
+
+    // Full snapshot for backup
+    exportAll() {
+      return {
+        app: APP_SIGNATURE,
+        version: SCHEMA_VERSION,
+        exportedAt: new Date().toISOString(),
+        data: {
+          settings:  this.getSettings(),
+          yearGoals: this.getYearGoals(),
+          habits:    this.getHabits(),
+          monthly:   this.getMonthly(),
+          weekly:    this.getWeekly(),
+          daily:     this.getDaily(),
+          notes:     this.getNotes(),
+          brainDump: this.getBrainDump(),
+        },
+      };
+    },
+
+    importAll(payload, mode) {
+      mode = mode || 'replace';
+      if (!payload || typeof payload !== 'object') {
+        return { ok: false, error: 'Empty or invalid payload' };
+      }
+      if (payload.app !== APP_SIGNATURE) {
+        return { ok: false, error: 'This backup does not belong to AZOUMAG PLANNER' };
+      }
+      if (!payload.data || typeof payload.data !== 'object') {
+        return { ok: false, error: 'Backup structure is invalid' };
+      }
+      const d = payload.data;
+
+      if (mode === 'replace') {
+        if (d.settings)  this.saveSettings(d.settings);
+        if (d.yearGoals) this.saveYearGoals(d.yearGoals);
+        if (d.habits)    this.saveHabits(d.habits);
+        if (d.monthly)   this.saveMonthly(d.monthly);
+        if (d.weekly)    this.saveWeekly(d.weekly);
+        if (d.daily)     this.saveDaily(d.daily);
+        if (d.notes)     this.saveNotes(d.notes);
+        if (d.brainDump) this.saveBrainDump(d.brainDump);
+      } else if (mode === 'merge') {
+        if (Array.isArray(d.yearGoals)) this.saveYearGoals([...this.getYearGoals(), ...d.yearGoals]);
+        if (Array.isArray(d.habits))    this.saveHabits([...this.getHabits(), ...d.habits]);
+        if (Array.isArray(d.notes))     this.saveNotes([...this.getNotes(), ...d.notes]);
+        if (Array.isArray(d.brainDump)) this.saveBrainDump([...this.getBrainDump(), ...d.brainDump]);
+        if (d.monthly) this.saveMonthly(Object.assign({}, this.getMonthly(), d.monthly));
+        if (d.weekly)  this.saveWeekly(Object.assign({}, this.getWeekly(), d.weekly));
+        if (d.daily)   this.saveDaily(Object.assign({}, this.getDaily(), d.daily));
+      }
+      return { ok: true };
+    },
+
+    resetAll() {
+      Object.values(K).forEach(k => localStorage.removeItem(k));
+    },
+
+    buildBackupFilename() {
+      const s = this.getSettings();
+      const shop = (s.plannerName || 'planner').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'planner';
+      const date = new Date().toISOString().slice(0, 10);
+      return `azoumag-planner-${shop}-${date}.json`;
+    },
+  };
+
+  global.AZStorage = AZStorage;
+  global.AZ_PLANNER_VERSION = '0.1.0';
+})(window);
+
+</script>
+  <script>
+/* AZOUMAG Planner — Welcome section: personalization + quick stats */
+(function () {
+  'use strict';
+
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+  }
+
+  const AZWelcome = {
+    refresh() {
+      const s = AZStorage.getSettings();
+      const heading = document.getElementById('az-welcome-heading');
+      const lead = document.getElementById('az-welcome-lead');
+      if (heading) heading.textContent = 'Welcome back to ' + (s.plannerName || 'your planner');
+      if (lead) lead.textContent = 'Today is ' + new Date().toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long' }) + '. Everything you type saves locally to this browser.';
+
+      const goals = AZStorage.getYearGoals();
+      const habits = AZStorage.getHabits();
+      const notes = AZStorage.getNotes();
+
+      const g = document.getElementById('az-welcome-goals');
+      const h = document.getElementById('az-welcome-habits');
+      const n = document.getElementById('az-welcome-notes');
+      const w = document.getElementById('az-welcome-week');
+
+      if (g) g.textContent = goals.length;
+      if (h) h.textContent = habits.length;
+      if (n) n.textContent = notes.length;
+      if (w) w.textContent = 'W' + isoWeek(new Date());
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZWelcome.refresh());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'welcome') AZWelcome.refresh();
+  });
+  document.addEventListener('az-data-changed', () => AZWelcome.refresh());
+
+  window.AZWelcome = AZWelcome;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Dashboard: KPI cards + top goals + today's habits */
+(function () {
+  'use strict';
+
+  function todayKey() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  function currentStreak(habit) {
+    const values = habit.values || {};
+    let streak = 0;
+    const d = new Date();
+    for (let i = 0; i < 365; i++) {
+      const k = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i).toISOString().slice(0, 10);
+      if (values[k] === 1) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  const AZDashboard = {
+    refresh() {
+      const goals = AZStorage.getYearGoals();
+      const habits = AZStorage.getHabits();
+
+      const totalGoalsEl = document.getElementById('az-dash-total-goals');
+      const activeGoalsEl = document.getElementById('az-dash-active-goals');
+      const totalHabitsEl = document.getElementById('az-dash-total-habits');
+      const longestEl = document.getElementById('az-dash-longest-streak');
+
+      const activeCount = goals.filter(g => g.status === 'In Progress' || g.status === 'Waiting').length;
+      const streaks = habits.map(currentStreak);
+      const longest = streaks.length ? Math.max.apply(null, streaks) : 0;
+
+      if (totalGoalsEl) totalGoalsEl.textContent = goals.length;
+      if (activeGoalsEl) activeGoalsEl.textContent = activeCount;
+      if (totalHabitsEl) totalHabitsEl.textContent = habits.length;
+      if (longestEl) longestEl.textContent = longest;
+
+      // Top goals by progress (top 3, exclude done)
+      const topBox = document.getElementById('az-dash-top-goals');
+      if (topBox) {
+        const top = goals
+          .filter(g => g.status !== 'Done')
+          .slice()
+          .sort((a, b) => (b.progress || 0) - (a.progress || 0))
+          .slice(0, 3);
+        if (top.length === 0) {
+          topBox.className = 'az-empty';
+          topBox.textContent = 'No active goals yet. Add one in the Year Goals tab.';
+        } else {
+          topBox.className = '';
+          topBox.innerHTML = top.map(g => {
+            const pct = Math.round((g.progress || 0) * 100);
+            return `
+              <div class="az-item" style="margin-bottom:10px;">
+                <div class="az-item-head">
+                  <span class="az-item-title">${escapeHtml(g.goal)}</span>
+                  <span class="az-chip">${escapeHtml(g.quarter || '')}</span>
+                </div>
+                <div class="az-progress"><div class="az-progress-fill" style="width:${pct}%"></div></div>
+                <div class="az-muted" style="font-size:12px;">${pct}% · ${escapeHtml(g.status || '')}</div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Today's habits
+      const todayBox = document.getElementById('az-dash-today-habits');
+      if (todayBox) {
+        if (habits.length === 0) {
+          todayBox.className = 'az-empty';
+          todayBox.textContent = 'No habits yet. Add one in the Habits tab.';
+        } else {
+          const tk = todayKey();
+          todayBox.className = '';
+          todayBox.innerHTML = habits.map(h => {
+            const v = (h.values || {})[tk];
+            let state = 'empty', dot = '○';
+            if (v === 1) { state = 'done'; dot = '✓'; }
+            else if (v === 0) { state = 'miss'; dot = '✕'; }
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--az-glass-border);">
+                <span>${escapeHtml(h.habit)}</span>
+                <span class="az-chip" style="min-width:32px; text-align:center;">${dot}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZDashboard.refresh());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'dashboard') AZDashboard.refresh();
+  });
+  document.addEventListener('az-data-changed', () => AZDashboard.refresh());
+
+  window.AZDashboard = AZDashboard;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Year Goals: add / list / edit progress + status / delete */
+(function () {
+  'use strict';
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  const STATUSES = ['Not Started', 'In Progress', 'Waiting', 'Done'];
+
+  const AZYearGoals = {
+    render() {
+      const list = AZStorage.getYearGoals();
+      const box = document.getElementById('az-yg-list');
+      if (!box) return;
+
+      if (list.length === 0) {
+        box.innerHTML = '<div class="az-empty">No goals yet. Add your first above.</div>';
+        return;
+      }
+
+      box.innerHTML = list.map(g => {
+        const pct = Math.round((g.progress || 0) * 100);
+        const statusOpts = STATUSES.map(s => `<option${s === g.status ? ' selected' : ''}>${s}</option>`).join('');
+        return `
+          <div class="az-item" data-id="${escapeHtml(g.id)}">
+            <div class="az-item-head">
+              <p class="az-item-title">${escapeHtml(g.goal)}</p>
+              <div class="az-item-meta">
+                <span class="az-chip">${escapeHtml(g.category || '')}</span>
+                <span class="az-chip">${escapeHtml(g.quarter || '')}</span>
+                ${g.deadline ? `<span class="az-chip">${escapeHtml(g.deadline)}</span>` : ''}
+                <span class="az-chip az-chip-status" data-status="${escapeHtml(g.status || 'Not Started')}">${escapeHtml(g.status || 'Not Started')}</span>
+              </div>
+            </div>
+            <div class="az-item-body">
+              ${g.successMetric ? `<p><strong>Metric:</strong> ${escapeHtml(g.successMetric)}</p>` : ''}
+              ${g.nextAction ? `<p><strong>Next:</strong> ${escapeHtml(g.nextAction)}</p>` : ''}
+            </div>
+            <div class="az-progress"><div class="az-progress-fill" style="width:${pct}%"></div></div>
+            <div class="az-item-actions">
+              <input type="range" min="0" max="100" value="${pct}" data-yg-progress="${escapeHtml(g.id)}" title="Progress" />
+              <span class="az-muted" style="min-width:38px; text-align:right;">${pct}%</span>
+              <select data-yg-status="${escapeHtml(g.id)}">${statusOpts}</select>
+              <button class="az-btn az-btn-ghost az-btn-sm" data-yg-delete="${escapeHtml(g.id)}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    },
+
+    add(payload) {
+      const list = AZStorage.getYearGoals();
+      list.unshift(Object.assign({ id: AZStorage.newId('yg'), progress: 0 }, payload));
+      AZStorage.saveYearGoals(list);
+      this.render();
+      fireChange();
+    },
+
+    update(id, patch) {
+      const list = AZStorage.getYearGoals();
+      const i = list.findIndex(x => x.id === id);
+      if (i === -1) return;
+      list[i] = Object.assign({}, list[i], patch);
+      AZStorage.saveYearGoals(list);
+      fireChange();
+    },
+
+    remove(id) {
+      const list = AZStorage.getYearGoals().filter(x => x.id !== id);
+      AZStorage.saveYearGoals(list);
+      this.render();
+      fireChange();
+    },
+
+    init() {
+      const form = document.getElementById('az-yg-form');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const goal = document.getElementById('az-yg-goal').value.trim();
+        if (!goal) return;
+        this.add({
+          goal,
+          category: document.getElementById('az-yg-category').value,
+          quarter: document.getElementById('az-yg-quarter').value,
+          deadline: document.getElementById('az-yg-deadline').value,
+          status: document.getElementById('az-yg-status').value,
+          successMetric: document.getElementById('az-yg-metric').value.trim(),
+          nextAction: document.getElementById('az-yg-next').value.trim(),
+        });
+        form.reset();
+      });
+
+      const list = document.getElementById('az-yg-list');
+      if (list) {
+        list.addEventListener('click', (e) => {
+          const del = e.target.closest('[data-yg-delete]');
+          if (del) {
+            if (confirm('Delete this goal?')) this.remove(del.getAttribute('data-yg-delete'));
+          }
+        });
+        list.addEventListener('input', (e) => {
+          const p = e.target.closest('[data-yg-progress]');
+          if (p) {
+            const id = p.getAttribute('data-yg-progress');
+            const pct = parseInt(p.value, 10) / 100;
+            this.update(id, { progress: pct });
+            // update visible fill without full re-render
+            const item = p.closest('.az-item');
+            const fill = item && item.querySelector('.az-progress-fill');
+            const label = p.parentNode.querySelector('.az-muted');
+            if (fill) fill.style.width = Math.round(pct * 100) + '%';
+            if (label) label.textContent = Math.round(pct * 100) + '%';
+          }
+        });
+        list.addEventListener('change', (e) => {
+          const s = e.target.closest('[data-yg-status]');
+          if (s) {
+            this.update(s.getAttribute('data-yg-status'), { status: s.value });
+            // update visible chip
+            const item = s.closest('.az-item');
+            const chip = item && item.querySelector('.az-chip-status');
+            if (chip) { chip.textContent = s.value; chip.setAttribute('data-status', s.value); }
+          }
+        });
+      }
+
+      this.render();
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZYearGoals.init());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'year-goals') AZYearGoals.render();
+  });
+
+  window.AZYearGoals = AZYearGoals;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Monthly Planner: per YYYY-MM priorities + dates + reflection */
+(function () {
+  'use strict';
+
+  function currentMonthKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function shiftMonth(key, delta) {
+    const [y, m] = key.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  const AZMonthly = {
+    currentKey: null,
+
+    load(key) {
+      this.currentKey = key;
+      const all = AZStorage.getMonthly();
+      const rec = all[key] || { priorities: [], dates: [], notes: '' };
+      const p = document.getElementById('az-monthly-priorities');
+      const d = document.getElementById('az-monthly-dates');
+      const n = document.getElementById('az-monthly-notes');
+      const picker = document.getElementById('az-monthly-picker');
+      if (p) p.value = (rec.priorities || []).join('\n');
+      if (d) d.value = (rec.dates || []).map(x => `${x.date} | ${x.note}`).join('\n');
+      if (n) n.value = rec.notes || '';
+      if (picker) picker.value = key;
+      const saved = document.getElementById('az-monthly-saved');
+      if (saved) saved.textContent = '';
+    },
+
+    save() {
+      if (!this.currentKey) return;
+      const all = AZStorage.getMonthly();
+      const priorities = (document.getElementById('az-monthly-priorities').value || '')
+        .split('\n').map(s => s.trim()).filter(Boolean);
+      const dates = (document.getElementById('az-monthly-dates').value || '')
+        .split('\n').map(s => s.trim()).filter(Boolean)
+        .map(line => {
+          const idx = line.indexOf('|');
+          if (idx === -1) return { date: line, note: '' };
+          return { date: line.slice(0, idx).trim(), note: line.slice(idx + 1).trim() };
+        });
+      const notes = document.getElementById('az-monthly-notes').value || '';
+      all[this.currentKey] = { priorities, dates, notes };
+      AZStorage.saveMonthly(all);
+      const saved = document.getElementById('az-monthly-saved');
+      if (saved) saved.textContent = 'Saved · ' + new Date().toLocaleTimeString();
+      document.dispatchEvent(new CustomEvent('az-data-changed'));
+    },
+
+    init() {
+      const picker = document.getElementById('az-monthly-picker');
+      const prev = document.getElementById('az-monthly-prev');
+      const next = document.getElementById('az-monthly-next');
+      const btnSave = document.getElementById('az-monthly-save');
+      if (!picker || !btnSave) return;
+
+      this.load(currentMonthKey());
+
+      picker.addEventListener('change', () => this.load(picker.value || currentMonthKey()));
+      if (prev) prev.addEventListener('click', () => this.load(shiftMonth(this.currentKey, -1)));
+      if (next) next.addEventListener('click', () => this.load(shiftMonth(this.currentKey, 1)));
+      btnSave.addEventListener('click', () => this.save());
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZMonthly.init());
+  window.AZMonthly = AZMonthly;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Habit Tracker: list + 14-day grid + streak, click cycles states */
+(function () {
+  'use strict';
+
+  const DAYS_BACK = 14;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function ymd(d) { return d.toISOString().slice(0, 10); }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  function currentStreak(values) {
+    values = values || {};
+    let streak = 0;
+    const d = new Date();
+    for (let i = 0; i < 365; i++) {
+      const k = ymd(new Date(d.getFullYear(), d.getMonth(), d.getDate() - i));
+      if (values[k] === 1) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  function monthDone(values) {
+    values = values || {};
+    const d = new Date();
+    let count = 0;
+    for (let i = 1; i <= d.getDate(); i++) {
+      const k = ymd(new Date(d.getFullYear(), d.getMonth(), i));
+      if (values[k] === 1) count++;
+    }
+    return count;
+  }
+
+  const AZHabits = {
+    render() {
+      const list = AZStorage.getHabits();
+      const box = document.getElementById('az-h-grid');
+      if (!box) return;
+
+      if (list.length === 0) {
+        box.innerHTML = '<div class="az-empty">No habits yet. Add your first above.</div>';
+        return;
+      }
+
+      const today = new Date();
+      const dayKeys = [];
+      for (let i = DAYS_BACK - 1; i >= 0; i--) {
+        dayKeys.push(ymd(new Date(today.getFullYear(), today.getMonth(), today.getDate() - i)));
+      }
+      const todayKey = ymd(today);
+
+      box.innerHTML = list.map(h => {
+        const streak = currentStreak(h.values);
+        const done = monthDone(h.values);
+        const target = h.target || 20;
+        const values = h.values || {};
+
+        const squares = dayKeys.map(k => {
+          const v = values[k];
+          let state = 'empty';
+          if (v === 1) state = 'done';
+          else if (v === 0) state = 'miss';
+          const isToday = k === todayKey ? '1' : '0';
+          const label = k + (state === 'done' ? ' — done' : state === 'miss' ? ' — missed' : '');
+          return `<button type="button" class="az-habit-day" data-state="${state}" data-today="${isToday}" data-habit="${escapeHtml(h.id)}" data-date="${k}" title="${label}" aria-label="${label}"></button>`;
+        }).join('');
+
+        return `
+          <div class="az-habit-row" data-id="${escapeHtml(h.id)}">
+            <div class="az-habit-info">
+              <div class="az-habit-name">${escapeHtml(h.habit)}</div>
+              <div class="az-habit-meta">
+                <span class="az-chip">${escapeHtml(h.category || 'Personal')}</span>
+                <span>Streak: ${streak}d</span>
+                <span>Month: ${done}/${target}</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center;">
+              <div class="az-habit-days">${squares}</div>
+              <button class="az-btn az-btn-ghost az-btn-sm az-habit-delete" data-h-delete="${escapeHtml(h.id)}" title="Delete habit">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    },
+
+    add(payload) {
+      const list = AZStorage.getHabits();
+      list.push(Object.assign({ id: AZStorage.newId('h'), values: {} }, payload));
+      AZStorage.saveHabits(list);
+      this.render();
+      fireChange();
+    },
+
+    cycleDay(habitId, dateKey) {
+      const list = AZStorage.getHabits();
+      const i = list.findIndex(x => x.id === habitId);
+      if (i === -1) return;
+      const values = list[i].values || {};
+      const cur = values[dateKey];
+      // empty → done → miss → empty
+      if (cur === undefined) values[dateKey] = 1;
+      else if (cur === 1) values[dateKey] = 0;
+      else delete values[dateKey];
+      list[i].values = values;
+      AZStorage.saveHabits(list);
+      this.render();
+      fireChange();
+    },
+
+    remove(id) {
+      const list = AZStorage.getHabits().filter(x => x.id !== id);
+      AZStorage.saveHabits(list);
+      this.render();
+      fireChange();
+    },
+
+    init() {
+      const form = document.getElementById('az-h-form');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('az-h-name').value.trim();
+        if (!name) return;
+        this.add({
+          habit: name,
+          category: document.getElementById('az-h-category').value,
+          target: parseInt(document.getElementById('az-h-target').value, 10) || 20,
+        });
+        form.reset();
+        document.getElementById('az-h-target').value = 20;
+      });
+
+      const grid = document.getElementById('az-h-grid');
+      if (grid) {
+        grid.addEventListener('click', (e) => {
+          const day = e.target.closest('.az-habit-day');
+          if (day) {
+            this.cycleDay(day.getAttribute('data-habit'), day.getAttribute('data-date'));
+            return;
+          }
+          const del = e.target.closest('[data-h-delete]');
+          if (del) {
+            if (confirm('Delete this habit and its history?')) this.remove(del.getAttribute('data-h-delete'));
+          }
+        });
+      }
+
+      this.render();
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZHabits.init());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'habits') AZHabits.render();
+  });
+
+  window.AZHabits = AZHabits;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Weekly Planner: per ISO-week focus + 7 day columns + reflection */
+(function () {
+  'use strict';
+
+  const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+
+  function isoWeekKey(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+    return t.getUTCFullYear() + '-W' + String(weekNo).padStart(2, '0');
+  }
+
+  function parseWeekKey(key) {
+    const m = /^(\d{4})-W(\d{1,2})$/.exec(key);
+    if (!m) return null;
+    return { year: parseInt(m[1], 10), week: parseInt(m[2], 10) };
+  }
+
+  function mondayOfIsoWeek(year, week) {
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7;
+    const monday = new Date(Date.UTC(year, 0, 4));
+    monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (week - 1) * 7);
+    return monday;
+  }
+
+  function shiftWeek(key, delta) {
+    const p = parseWeekKey(key);
+    if (!p) return isoWeekKey(new Date());
+    const mon = mondayOfIsoWeek(p.year, p.week);
+    mon.setUTCDate(mon.getUTCDate() + delta * 7);
+    return isoWeekKey(new Date(mon.getUTCFullYear(), mon.getUTCMonth(), mon.getUTCDate()));
+  }
+
+  function weekRangeLabel(key) {
+    const p = parseWeekKey(key);
+    if (!p) return '';
+    const mon = mondayOfIsoWeek(p.year, p.week);
+    const sun = new Date(mon);
+    sun.setUTCDate(mon.getUTCDate() + 6);
+    const fmt = (d) => d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+    return fmt(new Date(mon.getUTCFullYear(), mon.getUTCMonth(), mon.getUTCDate())) + ' → ' +
+           fmt(new Date(sun.getUTCFullYear(), sun.getUTCMonth(), sun.getUTCDate()));
+  }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  const AZWeekly = {
+    currentKey: null,
+
+    load(key) {
+      this.currentKey = key;
+      const all = AZStorage.getWeekly();
+      const rec = all[key] || { focus: '', mon: '', tue: '', wed: '', thu: '', fri: '', sat: '', sun: '', reflection: '' };
+      const focus = document.getElementById('az-weekly-focus');
+      const refl = document.getElementById('az-weekly-reflection');
+      const rangeEl = document.getElementById('az-weekly-range');
+      const label = document.getElementById('az-weekly-label');
+      const saved = document.getElementById('az-weekly-saved');
+      if (focus) focus.value = rec.focus || '';
+      if (refl) refl.value = rec.reflection || '';
+      if (rangeEl) rangeEl.textContent = weekRangeLabel(key);
+      if (label) label.textContent = key;
+      if (saved) saved.textContent = '';
+      DAYS.forEach(d => {
+        const ta = document.getElementById('az-weekly-day-' + d);
+        if (ta) ta.value = rec[d] || '';
+      });
+    },
+
+    save() {
+      if (!this.currentKey) return;
+      const all = AZStorage.getWeekly();
+      const rec = {
+        focus: (document.getElementById('az-weekly-focus').value || ''),
+        reflection: (document.getElementById('az-weekly-reflection').value || ''),
+      };
+      DAYS.forEach(d => {
+        const ta = document.getElementById('az-weekly-day-' + d);
+        rec[d] = ta ? ta.value || '' : '';
+      });
+      all[this.currentKey] = rec;
+      AZStorage.saveWeekly(all);
+      const saved = document.getElementById('az-weekly-saved');
+      if (saved) saved.textContent = 'Saved · ' + new Date().toLocaleTimeString();
+      fireChange();
+    },
+
+    init() {
+      const prev = document.getElementById('az-weekly-prev');
+      const next = document.getElementById('az-weekly-next');
+      const today = document.getElementById('az-weekly-today');
+      const btnSave = document.getElementById('az-weekly-save');
+      if (!btnSave) return;
+
+      this.load(isoWeekKey(new Date()));
+
+      if (prev) prev.addEventListener('click', () => this.load(shiftWeek(this.currentKey, -1)));
+      if (next) next.addEventListener('click', () => this.load(shiftWeek(this.currentKey, 1)));
+      if (today) today.addEventListener('click', () => this.load(isoWeekKey(new Date())));
+      btnSave.addEventListener('click', () => this.save());
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZWeekly.init());
+  window.AZWeekly = AZWeekly;
+  window.AZWeeklyLabels = DAY_LABELS;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Daily Planner: per YYYY-MM-DD Top-3, Schedule, Gratitude, Reflection */
+(function () {
+  'use strict';
+
+  function ymd(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function shiftDay(key, delta) {
+    const [y, m, d] = key.split('-').map(Number);
+    const t = new Date(y, m - 1, d + delta);
+    return ymd(t);
+  }
+
+  function humanDate(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+    });
+  }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  const AZDaily = {
+    currentKey: null,
+
+    load(key) {
+      this.currentKey = key;
+      const all = AZStorage.getDaily();
+      const rec = all[key] || { topThree: ['', '', ''], schedule: [], gratitude: '', reflection: '' };
+      const t1 = document.getElementById('az-daily-top1');
+      const t2 = document.getElementById('az-daily-top2');
+      const t3 = document.getElementById('az-daily-top3');
+      const sched = document.getElementById('az-daily-schedule');
+      const grat = document.getElementById('az-daily-gratitude');
+      const refl = document.getElementById('az-daily-reflection');
+      const picker = document.getElementById('az-daily-picker');
+      const label = document.getElementById('az-daily-label');
+      const saved = document.getElementById('az-daily-saved');
+
+      const top = rec.topThree || ['', '', ''];
+      if (t1) t1.value = top[0] || '';
+      if (t2) t2.value = top[1] || '';
+      if (t3) t3.value = top[2] || '';
+      if (sched) sched.value = (rec.schedule || []).map(x => `${x.time || ''} | ${x.task || ''}`).join('\n');
+      if (grat) grat.value = rec.gratitude || '';
+      if (refl) refl.value = rec.reflection || '';
+      if (picker) picker.value = key;
+      if (label) label.textContent = humanDate(key);
+      if (saved) saved.textContent = '';
+    },
+
+    save() {
+      if (!this.currentKey) return;
+      const all = AZStorage.getDaily();
+      const topThree = [
+        (document.getElementById('az-daily-top1').value || '').trim(),
+        (document.getElementById('az-daily-top2').value || '').trim(),
+        (document.getElementById('az-daily-top3').value || '').trim(),
+      ];
+      const schedule = (document.getElementById('az-daily-schedule').value || '')
+        .split('\n').map(s => s.trim()).filter(Boolean)
+        .map(line => {
+          const idx = line.indexOf('|');
+          if (idx === -1) return { time: '', task: line };
+          return { time: line.slice(0, idx).trim(), task: line.slice(idx + 1).trim() };
+        });
+      const gratitude = document.getElementById('az-daily-gratitude').value || '';
+      const reflection = document.getElementById('az-daily-reflection').value || '';
+      all[this.currentKey] = { topThree, schedule, gratitude, reflection };
+      AZStorage.saveDaily(all);
+      const saved = document.getElementById('az-daily-saved');
+      if (saved) saved.textContent = 'Saved · ' + new Date().toLocaleTimeString();
+      fireChange();
+    },
+
+    init() {
+      const picker = document.getElementById('az-daily-picker');
+      const prev = document.getElementById('az-daily-prev');
+      const next = document.getElementById('az-daily-next');
+      const today = document.getElementById('az-daily-today');
+      const btnSave = document.getElementById('az-daily-save');
+      if (!btnSave) return;
+
+      this.load(ymd(new Date()));
+
+      if (picker) picker.addEventListener('change', () => this.load(picker.value || ymd(new Date())));
+      if (prev) prev.addEventListener('click', () => this.load(shiftDay(this.currentKey, -1)));
+      if (next) next.addEventListener('click', () => this.load(shiftDay(this.currentKey, 1)));
+      if (today) today.addEventListener('click', () => this.load(ymd(new Date())));
+      btnSave.addEventListener('click', () => this.save());
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZDaily.init());
+  window.AZDaily = AZDaily;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Notes: title + body, edit in place, sorted by updatedAt desc */
+(function () {
+  'use strict';
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  function excerpt(text, n) {
+    text = (text || '').trim();
+    if (text.length <= n) return text;
+    return text.slice(0, n - 1) + '…';
+  }
+
+  function formatWhen(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  const AZNotes = {
+    editingId: null,
+
+    render() {
+      const list = AZStorage.getNotes()
+        .slice()
+        .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+      const box = document.getElementById('az-notes-list');
+      const count = document.getElementById('az-notes-count');
+      if (count) count.textContent = String(list.length);
+      if (!box) return;
+
+      if (list.length === 0) {
+        box.innerHTML = '<div class="az-empty">No notes yet. Write your first above.</div>';
+        return;
+      }
+
+      box.innerHTML = list.map(n => `
+        <div class="az-item az-note-item" data-id="${escapeHtml(n.id)}">
+          <div class="az-item-head">
+            <p class="az-item-title">${escapeHtml(n.title || 'Untitled')}</p>
+            <div class="az-item-meta">
+              <span class="az-chip">${escapeHtml(formatWhen(n.updatedAt))}</span>
+            </div>
+          </div>
+          <div class="az-item-body az-note-body">${escapeHtml(excerpt(n.body, 280))}</div>
+          <div class="az-item-actions">
+            <button class="az-btn az-btn-ghost az-btn-sm" data-note-edit="${escapeHtml(n.id)}">Edit</button>
+            <button class="az-btn az-btn-ghost az-btn-sm" data-note-delete="${escapeHtml(n.id)}">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    },
+
+    resetForm() {
+      this.editingId = null;
+      const t = document.getElementById('az-notes-title');
+      const b = document.getElementById('az-notes-body');
+      const btn = document.getElementById('az-notes-submit');
+      const cancel = document.getElementById('az-notes-cancel');
+      if (t) t.value = '';
+      if (b) b.value = '';
+      if (btn) btn.textContent = 'Save note';
+      if (cancel) cancel.hidden = true;
+    },
+
+    startEdit(id) {
+      const n = AZStorage.getNotes().find(x => x.id === id);
+      if (!n) return;
+      this.editingId = id;
+      const t = document.getElementById('az-notes-title');
+      const b = document.getElementById('az-notes-body');
+      const btn = document.getElementById('az-notes-submit');
+      const cancel = document.getElementById('az-notes-cancel');
+      if (t) t.value = n.title || '';
+      if (b) b.value = n.body || '';
+      if (btn) btn.textContent = 'Update note';
+      if (cancel) cancel.hidden = false;
+      if (t) t.focus();
+    },
+
+    submit(title, body) {
+      const list = AZStorage.getNotes();
+      const now = new Date().toISOString();
+      if (this.editingId) {
+        const i = list.findIndex(x => x.id === this.editingId);
+        if (i !== -1) list[i] = Object.assign({}, list[i], { title, body, updatedAt: now });
+      } else {
+        list.unshift({ id: AZStorage.newId('note'), title, body, updatedAt: now });
+      }
+      AZStorage.saveNotes(list);
+      this.resetForm();
+      this.render();
+      fireChange();
+    },
+
+    remove(id) {
+      const list = AZStorage.getNotes().filter(x => x.id !== id);
+      AZStorage.saveNotes(list);
+      if (this.editingId === id) this.resetForm();
+      this.render();
+      fireChange();
+    },
+
+    init() {
+      const form = document.getElementById('az-notes-form');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = (document.getElementById('az-notes-title').value || '').trim();
+        const body = (document.getElementById('az-notes-body').value || '').trim();
+        if (!title && !body) return;
+        this.submit(title, body);
+      });
+
+      const cancel = document.getElementById('az-notes-cancel');
+      if (cancel) cancel.addEventListener('click', () => this.resetForm());
+
+      const list = document.getElementById('az-notes-list');
+      if (list) {
+        list.addEventListener('click', (e) => {
+          const edit = e.target.closest('[data-note-edit]');
+          if (edit) { this.startEdit(edit.getAttribute('data-note-edit')); return; }
+          const del = e.target.closest('[data-note-delete]');
+          if (del) {
+            if (confirm('Delete this note?')) this.remove(del.getAttribute('data-note-delete'));
+          }
+        });
+      }
+
+      this.render();
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZNotes.init());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'notes') AZNotes.render();
+  });
+  window.AZNotes = AZNotes;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Brain Dump: quick capture with priority + done toggle */
+(function () {
+  'use strict';
+
+  const PRIO_ORDER = { high: 0, med: 1, low: 2 };
+  const PRIO_LABEL = { high: 'High', med: 'Medium', low: 'Low' };
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function fireChange() {
+    document.dispatchEvent(new CustomEvent('az-data-changed'));
+  }
+
+  function sortItems(list) {
+    return list.slice().sort((a, b) => {
+      const doneA = a.done ? 1 : 0;
+      const doneB = b.done ? 1 : 0;
+      if (doneA !== doneB) return doneA - doneB;
+      const pa = PRIO_ORDER[a.priority] == null ? 3 : PRIO_ORDER[a.priority];
+      const pb = PRIO_ORDER[b.priority] == null ? 3 : PRIO_ORDER[b.priority];
+      if (pa !== pb) return pa - pb;
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+  }
+
+  const AZBrainDump = {
+    render() {
+      const list = sortItems(AZStorage.getBrainDump());
+      const box = document.getElementById('az-bd-list');
+      const openCount = document.getElementById('az-bd-open');
+      if (openCount) openCount.textContent = String(list.filter(x => !x.done).length);
+      if (!box) return;
+
+      if (list.length === 0) {
+        box.innerHTML = '<div class="az-empty">Nothing yet. Offload what\'s on your mind above.</div>';
+        return;
+      }
+
+      box.innerHTML = list.map(it => {
+        const p = it.priority || 'med';
+        return `
+          <div class="az-bd-item${it.done ? ' az-bd-done' : ''}" data-id="${escapeHtml(it.id)}">
+            <label class="az-bd-check">
+              <input type="checkbox" data-bd-done="${escapeHtml(it.id)}"${it.done ? ' checked' : ''} />
+            </label>
+            <div class="az-bd-text">${escapeHtml(it.text)}</div>
+            <span class="az-chip az-bd-prio" data-prio="${escapeHtml(p)}">${escapeHtml(PRIO_LABEL[p] || 'Medium')}</span>
+            <button class="az-btn az-btn-ghost az-btn-sm" data-bd-delete="${escapeHtml(it.id)}" title="Delete">✕</button>
+          </div>
+        `;
+      }).join('');
+    },
+
+    add(text, priority) {
+      const list = AZStorage.getBrainDump();
+      list.push({
+        id: AZStorage.newId('bd'),
+        text,
+        priority: priority || 'med',
+        createdAt: new Date().toISOString(),
+        done: false,
+      });
+      AZStorage.saveBrainDump(list);
+      this.render();
+      fireChange();
+    },
+
+    toggle(id) {
+      const list = AZStorage.getBrainDump();
+      const i = list.findIndex(x => x.id === id);
+      if (i === -1) return;
+      list[i].done = !list[i].done;
+      AZStorage.saveBrainDump(list);
+      this.render();
+      fireChange();
+    },
+
+    remove(id) {
+      const list = AZStorage.getBrainDump().filter(x => x.id !== id);
+      AZStorage.saveBrainDump(list);
+      this.render();
+      fireChange();
+    },
+
+    clearDone() {
+      const list = AZStorage.getBrainDump().filter(x => !x.done);
+      AZStorage.saveBrainDump(list);
+      this.render();
+      fireChange();
+    },
+
+    init() {
+      const form = document.getElementById('az-bd-form');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = (document.getElementById('az-bd-text').value || '').trim();
+        if (!text) return;
+        const prio = document.getElementById('az-bd-priority').value || 'med';
+        this.add(text, prio);
+        document.getElementById('az-bd-text').value = '';
+        document.getElementById('az-bd-text').focus();
+      });
+
+      const clear = document.getElementById('az-bd-clear-done');
+      if (clear) clear.addEventListener('click', () => {
+        if (confirm('Clear all completed items?')) this.clearDone();
+      });
+
+      const list = document.getElementById('az-bd-list');
+      if (list) {
+        list.addEventListener('click', (e) => {
+          const del = e.target.closest('[data-bd-delete]');
+          if (del) {
+            if (confirm('Delete this item?')) this.remove(del.getAttribute('data-bd-delete'));
+          }
+        });
+        list.addEventListener('change', (e) => {
+          const chk = e.target.closest('[data-bd-done]');
+          if (chk) this.toggle(chk.getAttribute('data-bd-done'));
+        });
+      }
+
+      this.render();
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZBrainDump.init());
+  document.addEventListener('az-view-shown', (e) => {
+    if (e.detail && e.detail.name === 'brain-dump') AZBrainDump.render();
+  });
+  window.AZBrainDump = AZBrainDump;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Export: CSV per section + Print all or single section */
+(function () {
+  'use strict';
+
+  function csvEscape(v) {
+    if (v == null) return '';
+    const s = String(v);
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function toCsv(headers, rows) {
+    const head = headers.map(csvEscape).join(',');
+    const body = rows.map(r => headers.map(h => csvEscape(r[h])).join(',')).join('\r\n');
+    return head + '\r\n' + body + '\r\n';
+  }
+
+  function download(filename, content, mime) {
+    const blob = new Blob([content], { type: mime || 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function filename(kind, ext) {
+    const s = AZStorage.getSettings();
+    const shop = (s.plannerName || 'planner').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'planner';
+    const date = new Date().toISOString().slice(0, 10);
+    return `azoumag-planner-${shop}-${kind}-${date}.${ext || 'csv'}`;
+  }
+
+  const AZExport = {
+    yearGoalsCsv() {
+      const headers = ['goal', 'category', 'quarter', 'deadline', 'status', 'progressPct', 'successMetric', 'nextAction'];
+      const rows = AZStorage.getYearGoals().map(g => ({
+        goal: g.goal || '',
+        category: g.category || '',
+        quarter: g.quarter || '',
+        deadline: g.deadline || '',
+        status: g.status || '',
+        progressPct: Math.round((g.progress || 0) * 100),
+        successMetric: g.successMetric || '',
+        nextAction: g.nextAction || '',
+      }));
+      download(filename('year-goals'), toCsv(headers, rows));
+    },
+
+    habitsCsv() {
+      const habits = AZStorage.getHabits();
+      const dateSet = new Set();
+      habits.forEach(h => Object.keys(h.values || {}).forEach(k => dateSet.add(k)));
+      const dates = Array.from(dateSet).sort();
+      const headers = ['habit', 'category', 'target', ...dates];
+      const rows = habits.map(h => {
+        const row = { habit: h.habit || '', category: h.category || '', target: h.target || '' };
+        dates.forEach(d => {
+          const v = (h.values || {})[d];
+          row[d] = v === 1 ? 'done' : v === 0 ? 'missed' : '';
+        });
+        return row;
+      });
+      download(filename('habits'), toCsv(headers, rows));
+    },
+
+    notesCsv() {
+      const headers = ['title', 'body', 'updatedAt'];
+      const rows = AZStorage.getNotes()
+        .slice()
+        .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))
+        .map(n => ({ title: n.title || '', body: n.body || '', updatedAt: n.updatedAt || '' }));
+      download(filename('notes'), toCsv(headers, rows));
+    },
+
+    brainDumpCsv() {
+      const headers = ['text', 'priority', 'done', 'createdAt'];
+      const rows = AZStorage.getBrainDump().map(x => ({
+        text: x.text || '',
+        priority: x.priority || 'med',
+        done: x.done ? 'yes' : 'no',
+        createdAt: x.createdAt || '',
+      }));
+      download(filename('brain-dump'), toCsv(headers, rows));
+    },
+
+    printAll() {
+      const root = document.getElementById('az-planner');
+      if (root) root.removeAttribute('data-print-section');
+      window.print();
+    },
+
+    printSection(name) {
+      const root = document.getElementById('az-planner');
+      if (!root) return;
+      root.setAttribute('data-print-section', name);
+      // Give the browser a tick to apply the attribute before printing
+      setTimeout(() => {
+        window.print();
+        // Clean up on next tick after print dialog closes (safe either way)
+        setTimeout(() => root.removeAttribute('data-print-section'), 500);
+      }, 20);
+    },
+
+    init() {
+      const root = document.getElementById('az-planner');
+      if (!root) return;
+
+      root.addEventListener('click', (e) => {
+        const exp = e.target.closest('[data-export]');
+        if (exp) {
+          const kind = exp.getAttribute('data-export');
+          try {
+            if (kind === 'year-goals') this.yearGoalsCsv();
+            else if (kind === 'habits') this.habitsCsv();
+            else if (kind === 'notes') this.notesCsv();
+            else if (kind === 'brain-dump') this.brainDumpCsv();
+          } catch (err) {
+            document.dispatchEvent(new CustomEvent('az-toast', { detail: { message: 'Export failed', kind: 'error' } }));
+          }
+          return;
+        }
+        const printAll = e.target.closest('[data-print-all]');
+        if (printAll) { this.printAll(); return; }
+        const printSec = e.target.closest('[data-print-section]');
+        if (printSec) this.printSection(printSec.getAttribute('data-print-section'));
+      });
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => AZExport.init());
+  window.AZExport = AZExport;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Themes: CSS variable swaps applied to #az-planner */
+(function () {
+  'use strict';
+
+  const THEMES = {
+    'base': {
+      label: 'Base — Deep Navy / Orange',
+      vars: {}, // uses defaults from stylesheet
+    },
+    'focus-reset': {
+      label: 'Focus Reset — Sage / Terracotta',
+      vars: {
+        '--az-orange':      '#D9845B',
+        '--az-orange-soft': '#e39c78',
+        '--az-navy':        '#2F4F4A',
+        '--az-navy-deep':   '#203834',
+        '--az-navy-light':  '#A6BFB7',
+        '--az-offwhite':    '#FFFDF9',
+      },
+    },
+    'midnight': {
+      label: 'Midnight — pure dark, cool blue',
+      vars: {
+        '--az-orange':      '#6EA8FE',
+        '--az-orange-soft': '#8FBBFE',
+        '--az-navy':        '#0B0F1A',
+        '--az-navy-deep':   '#050810',
+        '--az-navy-light':  '#1B2438',
+        '--az-offwhite':    '#E8ECF5',
+      },
+    },
+    'warm-paper': {
+      label: 'Warm Paper — cream + terracotta',
+      vars: {
+        '--az-orange':      '#B8532A',
+        '--az-orange-soft': '#D07446',
+        '--az-navy':        '#F2E7D5',
+        '--az-navy-deep':   '#E5D6BE',
+        '--az-navy-light':  '#C9B58F',
+        '--az-offwhite':    '#3B2E20',
+      },
+    },
+    'mono': {
+      label: 'Mono — distraction-free grayscale',
+      vars: {
+        '--az-orange':      '#4A4A4A',
+        '--az-orange-soft': '#6A6A6A',
+        '--az-navy':        '#1A1A1A',
+        '--az-navy-deep':   '#0F0F0F',
+        '--az-navy-light':  '#3A3A3A',
+        '--az-offwhite':    '#EDEDED',
+      },
+    },
+  };
+
+  const AZThemes = {
+    list() {
+      return Object.keys(THEMES).map(id => ({ id, label: THEMES[id].label }));
+    },
+
+    apply(name) {
+      const root = document.getElementById('az-planner');
+      if (!root) return;
+      const t = THEMES[name] || THEMES.base;
+      // Wipe any previously-set var, then apply new
+      Object.keys(THEMES.base.vars || {}).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES['focus-reset'].vars).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES.midnight.vars).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES['warm-paper'].vars).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES.mono.vars).forEach(k => root.style.removeProperty(k));
+      Object.entries(t.vars || {}).forEach(([k, v]) => root.style.setProperty(k, v));
+      root.setAttribute('data-theme', name);
+    },
+
+    hydrateSelect(selectEl) {
+      if (!selectEl) return;
+      const cur = selectEl.value;
+      selectEl.innerHTML = this.list().map(t => `<option value="${t.id}">${t.label}</option>`).join('');
+      if (cur && THEMES[cur]) selectEl.value = cur;
+    },
+  };
+
+  window.AZThemes = AZThemes;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — Product presets: seed goals / habits / monthly for a given SKU */
+(function () {
+  'use strict';
+
+  function todayYmd() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function endOfQuarter(qOffset) {
+    const now = new Date();
+    const q = Math.floor(now.getMonth() / 3) + (qOffset || 0);
+    const endMonth = (q + 1) * 3 - 1; // 0-indexed last month of quarter
+    const y = now.getFullYear() + Math.floor(endMonth / 12);
+    const m = ((endMonth % 12) + 12) % 12;
+    const last = new Date(y, m + 1, 0);
+    return last.getFullYear() + '-' + String(last.getMonth() + 1).padStart(2, '0') + '-' + String(last.getDate()).padStart(2, '0');
+  }
+
+  function currentMonthKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  const PRESETS = {
+    'solo-founder': {
+      label: 'Solo Founder — ship one product this quarter',
+      theme: 'base',
+      goals: [
+        { goal: 'Ship v1 of the flagship product', category: 'Career', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'In Progress', successMetric: '10 paying users or 100 sign-ups', nextAction: 'Write the landing page copy', progress: 0.1 },
+        { goal: 'Publish 12 pieces of content', category: 'Career', quarter: 'Year', status: 'Not Started', successMetric: '1 post per week', nextAction: 'Draft this week\'s post', progress: 0 },
+        { goal: 'Talk to 20 potential users', category: 'Career', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: '20 recorded calls', nextAction: 'Book first 3 calls', progress: 0 },
+      ],
+      habits: [
+        { habit: 'Deep work 90 min', category: 'Focus', target: 22 },
+        { habit: 'Ship one thing today', category: 'Focus', target: 22 },
+        { habit: 'Write 250 words', category: 'Learning', target: 20 },
+        { habit: 'Exercise 30 min', category: 'Health', target: 20 },
+      ],
+      monthly: {
+        priorities: ['Land v1 launch date', 'Publish 4 posts', 'Weekly user calls'],
+        notes: 'Ship-mode month. Ruthless focus on the launch. Say no to anything that does not move v1 forward.',
+      },
+    },
+
+    'focus-reset': {
+      label: 'Focus Reset — 90-day mental clarity sprint',
+      theme: 'focus-reset',
+      goals: [
+        { goal: 'Complete a 90-day mental reset', category: 'Personal', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'In Progress', successMetric: 'No dopamine-crash apps for 90 days', nextAction: 'Delete distraction apps tonight', progress: 0.05 },
+        { goal: 'Read 6 books this quarter', category: 'Learning', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: '6 finished books', nextAction: 'Pick book #1', progress: 0 },
+        { goal: 'Rebuild a morning routine', category: 'Health', quarter: 'Year', status: 'In Progress', successMetric: '30 consecutive days', nextAction: 'Set wake time and prep the night before', progress: 0.15 },
+      ],
+      habits: [
+        { habit: 'Wake before 7am', category: 'Health', target: 25 },
+        { habit: 'Read 20 pages', category: 'Learning', target: 25 },
+        { habit: 'Journal 10 min', category: 'Personal', target: 25 },
+        { habit: 'No social media before noon', category: 'Focus', target: 25 },
+        { habit: 'Walk 30 min outside', category: 'Health', target: 20 },
+      ],
+      monthly: {
+        priorities: ['90-day reset', 'Reading list', 'Morning routine locked'],
+        notes: 'Slow month. Depth over speed. Show up daily, no exceptions.',
+      },
+    },
+
+    'student': {
+      label: 'Student — semester ops',
+      theme: 'base',
+      goals: [
+        { goal: 'Pass all courses with distinction', category: 'Learning', quarter: 'Year', status: 'In Progress', successMetric: 'Average > 15/20', nextAction: 'Plan revision schedule', progress: 0.2 },
+        { goal: 'Complete one side project', category: 'Career', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: 'Deployed and shared', nextAction: 'Choose the project', progress: 0 },
+      ],
+      habits: [
+        { habit: 'Study 2 hours', category: 'Learning', target: 25 },
+        { habit: 'Review notes', category: 'Learning', target: 22 },
+        { habit: 'Exercise', category: 'Health', target: 18 },
+        { habit: 'Sleep by midnight', category: 'Health', target: 25 },
+      ],
+      monthly: {
+        priorities: ['Exam prep', 'Assignment deadlines', 'Rest and recovery'],
+        notes: 'Balance revision with breaks. Sleep is a performance tool, not a reward.',
+      },
+    },
+  };
+
+  const AZPresets = {
+    list() {
+      return Object.keys(PRESETS).map(id => ({ id, label: PRESETS[id].label, theme: PRESETS[id].theme }));
+    },
+
+    get(id) { return PRESETS[id]; },
+
+    hydrateSelect(selectEl) {
+      if (!selectEl) return;
+      selectEl.innerHTML = '<option value="">— pick a preset —</option>' +
+        this.list().map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+    },
+
+    apply(id, mode) {
+      const p = PRESETS[id];
+      if (!p) return { ok: false, error: 'Unknown preset' };
+      mode = mode || 'merge'; // 'merge' | 'replace'
+
+      // Goals
+      const goals = (p.goals || []).map(g => Object.assign({ id: AZStorage.newId('yg'), progress: 0 }, g));
+      if (mode === 'replace') AZStorage.saveYearGoals(goals);
+      else AZStorage.saveYearGoals([...goals, ...AZStorage.getYearGoals()]);
+
+      // Habits
+      const habits = (p.habits || []).map(h => Object.assign({ id: AZStorage.newId('h'), values: {} }, h));
+      if (mode === 'replace') AZStorage.saveHabits(habits);
+      else AZStorage.saveHabits([...AZStorage.getHabits(), ...habits]);
+
+      // Monthly for current month (only if empty in merge mode)
+      const monthly = AZStorage.getMonthly();
+      const key = currentMonthKey();
+      const existing = monthly[key];
+      if (mode === 'replace' || !existing || (!existing.priorities || existing.priorities.length === 0) && !existing.notes) {
+        monthly[key] = {
+          priorities: (p.monthly && p.monthly.priorities) || [],
+          dates: (existing && existing.dates) || [],
+          notes: (p.monthly && p.monthly.notes) || '',
+        };
+        AZStorage.saveMonthly(monthly);
+      }
+
+      // Theme
+      if (p.theme && window.AZThemes) {
+        const s = AZStorage.getSettings();
+        s.theme = p.theme;
+        AZStorage.saveSettings(s);
+        AZThemes.apply(p.theme);
+      }
+
+      document.dispatchEvent(new CustomEvent('az-data-changed'));
+      return { ok: true, applied: { goals: goals.length, habits: habits.length } };
+    },
+  };
+
+  window.AZPresets = AZPresets;
+})();
+
+</script>
+  <script>
+/* AZOUMAG Planner — App wiring (tabs, settings, backup, reset) */
+(function () {
+  'use strict';
+
+  const root = document.getElementById('az-planner');
+  if (!root) return;
+
+  const $ = (sel, ctx) => (ctx || root).querySelector(sel);
+  const $$ = (sel, ctx) => Array.from((ctx || root).querySelectorAll(sel));
+
+  // ------- Toast -------
+  const toastEl = $('#az-toast');
+  let toastTimer = null;
+  function flash(message, kind) {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.classList.toggle('az-toast-error', kind === 'error');
+    toastEl.classList.add('az-toast-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('az-toast-show'), 2600);
+  }
+  const flashOk = (m) => flash(m, 'ok');
+  const flashErr = (m) => flash(m, 'error');
+
+  // ------- Tabs -------
+  function switchTab(name) {
+    $$('.az-tab').forEach(t => {
+      const active = t.dataset.tab === name;
+      t.classList.toggle('az-tab-active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    $$('.az-view').forEach(v => {
+      const active = v.id === `az-view-${name}`;
+      v.classList.toggle('az-view-active', active);
+      if (active) v.removeAttribute('hidden');
+      else v.setAttribute('hidden', '');
+    });
+    try { localStorage.setItem('az_planner_current_tab', name); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('az-view-shown', { detail: { name } }));
+  }
+  $$('.az-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+  // Restore last tab
+  try {
+    const last = localStorage.getItem('az_planner_current_tab');
+    if (last && $(`#az-view-${last}`)) switchTab(last);
+  } catch (e) {}
+
+  // ------- Today date -------
+  const todayEl = $('#az-today');
+  if (todayEl) {
+    const d = new Date();
+    todayEl.textContent = d.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // ------- Settings -------
+  const settingsForm = $('#az-settings-form');
+  const shopNameEl = $('#az-shop-name');
+  const setShop = $('#az-set-shop');
+  const setYear = $('#az-set-year');
+  const setTheme = $('#az-set-theme');
+
+  function hydrateSettings() {
+    const s = AZStorage.getSettings();
+    if (setShop) setShop.value = s.plannerName || '';
+    if (setYear) setYear.value = s.year || new Date().getFullYear();
+    if (setTheme) setTheme.value = s.theme || 'base';
+    if (shopNameEl) shopNameEl.textContent = s.plannerName || 'Your Planner';
+    applyTheme(s.theme || 'base');
+  }
+
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const s = AZStorage.getSettings();
+      s.plannerName = setShop ? setShop.value.trim() || 'Your Planner' : s.plannerName;
+      s.year = setYear ? parseInt(setYear.value, 10) || s.year : s.year;
+      s.theme = setTheme ? setTheme.value : s.theme;
+      AZStorage.saveSettings(s);
+      hydrateSettings();
+      flashOk('Settings saved');
+    });
+  }
+
+  // ------- Theme swap (delegates to AZThemes) -------
+  function applyTheme(name) {
+    if (window.AZThemes) AZThemes.apply(name || 'base');
+  }
+
+  // Populate the theme <select> with all registered themes
+  if (setTheme && window.AZThemes) AZThemes.hydrateSelect(setTheme);
+
+  // ------- Product presets -------
+  const presetSelect = $('#az-preset-select');
+  const presetApply = $('#az-preset-apply');
+  if (presetSelect && window.AZPresets) AZPresets.hydrateSelect(presetSelect);
+  if (presetApply) {
+    presetApply.addEventListener('click', () => {
+      const id = presetSelect ? presetSelect.value : '';
+      if (!id) { flashErr('Pick a preset first'); return; }
+      const mode = confirm('Merge preset into current data?\nOK = merge · Cancel = replace all planner data')
+        ? 'merge' : 'replace';
+      if (mode === 'replace' && !confirm('Really replace all goals, habits and this month\'s plan?')) return;
+      const res = AZPresets.apply(id, mode);
+      if (res.ok) {
+        hydrateSettings();
+        flashOk(`Preset applied · ${res.applied.goals} goals · ${res.applied.habits} habits`);
+      } else {
+        flashErr(res.error || 'Preset failed');
+      }
+    });
+  }
+
+  // ------- Backup / Restore -------
+  const backupInfo = $('#az-backup-info');
+  function hydrateBackupInfo() {
+    if (!backupInfo) return;
+    const meta = AZStorage.getMeta();
+    if (meta.lastBackupAt) {
+      const d = new Date(meta.lastBackupAt);
+      backupInfo.textContent = 'Last backup: ' + d.toLocaleString();
+    } else {
+      backupInfo.textContent = 'Last backup: never';
+    }
+  }
+
+  const btnExport = $('#az-backup-export');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      try {
+        const payload = AZStorage.exportAll();
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = AZStorage.buildBackupFilename();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        AZStorage.markBackupDone();
+        hydrateBackupInfo();
+        flashOk('Backup downloaded');
+      } catch (e) {
+        flashErr('Backup failed');
+      }
+    });
+  }
+
+  const fileInput = $('#az-backup-file');
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(reader.result);
+          if (!confirm('Restore this backup? It will replace your current planner data.')) {
+            fileInput.value = '';
+            return;
+          }
+          const res = AZStorage.importAll(payload, 'replace');
+          if (res.ok) {
+            hydrateSettings();
+            hydrateBackupInfo();
+            flashOk('Backup restored');
+          } else {
+            flashErr(res.error || 'Restore failed');
+          }
+        } catch (err) {
+          flashErr('Invalid JSON file');
+        }
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  // ------- Reset -------
+  const btnReset = $('#az-reset-data');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      if (!confirm('Reset ALL planner data? This cannot be undone.')) return;
+      if (!confirm('Really reset? Consider downloading a backup first.')) return;
+      AZStorage.resetAll();
+      hydrateSettings();
+      hydrateBackupInfo();
+      flashOk('All data reset');
+    });
+  }
+
+  // ------- Version tag -------
+  const versionEl = $('#az-version');
+  if (versionEl && window.AZ_PLANNER_VERSION) versionEl.textContent = 'v' + window.AZ_PLANNER_VERSION;
+
+  // ------- Init -------
+  hydrateSettings();
+  hydrateBackupInfo();
+})();
+
+</script>
+</body>
+</html>
