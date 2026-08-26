@@ -1,0 +1,28 @@
+{
+  "brandName": "AZOUMAG",
+  "productName": "AZOUMAG PLANNER",
+  "slogan": "The Ultimate Online Solutions",
+  "colors": {
+    "primary": "#1D2240",
+    "secondary": "#F37021",
+    "lightPrimary": "#3D4573",
+    "darkPrimary": "#12162B",
+    "offWhite": "#FFF4EC",
+    "black": "#111111",
+    "success": "#00C853",
+    "warning": "#FFAB00",
+    "danger": "#F44336",
+    "surface": "#FFFFFF",
+    "pageBase": "#FFF4EC"
+  },
+  "themes": {
+    "base": {
+      "primary": "#1D2240",
+      "secondary": "#F37021"
+    },
+    "focus-reset": {
+      "primary": "#2F4F4A",
+      "secondary": "#D9845B"
+    }
+  }
+}
