@@ -497,6 +497,18 @@
   #az-planner .az-footer,
   #az-planner .az-toast { display: none; }
   #az-planner .az-view { display: block !important; page-break-after: always; }
+  #az-planner[data-print-section] .az-view { display: none !important; page-break-after: auto; }
+  #az-planner[data-print-section="monthly"] #az-view-monthly,
+  #az-planner[data-print-section="weekly"]  #az-view-weekly,
+  #az-planner[data-print-section="daily"]   #az-view-daily,
+  #az-planner[data-print-section="year-goals"] #az-view-year-goals,
+  #az-planner[data-print-section="habits"]  #az-view-habits,
+  #az-planner[data-print-section="notes"]   #az-view-notes,
+  #az-planner[data-print-section="brain-dump"] #az-view-brain-dump { display: block !important; }
+  #az-planner .az-view-head button,
+  #az-planner .az-form-actions,
+  #az-planner .az-item-actions,
+  #az-planner .az-backup-actions { display: none !important; }
   #az-planner .az-card,
   #az-planner .az-kpi,
   #az-planner .az-item,

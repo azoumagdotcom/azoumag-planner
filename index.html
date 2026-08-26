@@ -153,7 +153,10 @@
 
       <!-- MONTHLY -->
       <section class="az-view" id="az-view-monthly" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Monthly Planner</h2></div>
+        <div class="az-view-head">
+          <h2>Monthly Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="monthly" style="margin-left:auto;">Print</button>
+        </div>
         <div class="az-month-nav">
           <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-monthly-prev">← Prev</button>
           <input type="month" id="az-monthly-picker" />
@@ -214,7 +217,10 @@
 
       <!-- WEEKLY -->
       <section class="az-view" id="az-view-weekly" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Weekly Planner</h2></div>
+        <div class="az-view-head">
+          <h2>Weekly Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="weekly" style="margin-left:auto;">Print</button>
+        </div>
         <div class="az-month-nav">
           <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-weekly-prev">← Prev</button>
           <span class="az-weekly-title"><strong id="az-weekly-label">—</strong> <span class="az-muted" id="az-weekly-range"></span></span>
@@ -250,7 +256,10 @@
 
       <!-- DAILY -->
       <section class="az-view" id="az-view-daily" role="tabpanel" hidden>
-        <div class="az-view-head"><h2>Daily Planner</h2></div>
+        <div class="az-view-head">
+          <h2>Daily Planner</h2>
+          <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-print-section="daily" style="margin-left:auto;">Print</button>
+        </div>
         <div class="az-month-nav">
           <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-daily-prev">← Prev</button>
           <input type="date" id="az-daily-picker" />
@@ -367,6 +376,18 @@
           </div>
         </div>
 
+        <div class="az-form">
+          <h3>Export &amp; Print</h3>
+          <p class="az-muted">CSV files open in Excel · Numbers · Google Sheets. Print outputs a clean paper layout.</p>
+          <div class="az-backup-actions">
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="year-goals">Year goals CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="habits">Habits CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="notes">Notes CSV</button>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" data-export="brain-dump">Brain dump CSV</button>
+            <button type="button" class="az-btn az-btn-primary" data-print-all="1">Print full planner</button>
+          </div>
+        </div>
+
         <div class="az-form az-danger-zone">
           <h3>Danger zone</h3>
           <div class="az-form-actions">
@@ -394,6 +415,7 @@
   <script src="js/daily.js"></script>
   <script src="js/notes.js"></script>
   <script src="js/brain-dump.js"></script>
+  <script src="js/export.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
