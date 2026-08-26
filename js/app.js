@@ -82,24 +82,33 @@
     });
   }
 
-  // ------- Theme swap (base / focus-reset) -------
+  // ------- Theme swap (delegates to AZThemes) -------
   function applyTheme(name) {
-    // Base theme = default CSS vars. Focus-reset overrides via inline vars.
-    if (name === 'focus-reset') {
-      root.style.setProperty('--az-orange', '#D9845B');
-      root.style.setProperty('--az-orange-soft', '#e39c78');
-      root.style.setProperty('--az-navy', '#2F4F4A');
-      root.style.setProperty('--az-navy-deep', '#203834');
-      root.style.setProperty('--az-navy-light', '#A6BFB7');
-      root.style.setProperty('--az-offwhite', '#FFFDF9');
-    } else {
-      root.style.removeProperty('--az-orange');
-      root.style.removeProperty('--az-orange-soft');
-      root.style.removeProperty('--az-navy');
-      root.style.removeProperty('--az-navy-deep');
-      root.style.removeProperty('--az-navy-light');
-      root.style.removeProperty('--az-offwhite');
-    }
+    if (window.AZThemes) AZThemes.apply(name || 'base');
+  }
+
+  // Populate the theme <select> with all registered themes
+  if (setTheme && window.AZThemes) AZThemes.hydrateSelect(setTheme);
+
+  // ------- Product presets -------
+  const presetSelect = $('#az-preset-select');
+  const presetApply = $('#az-preset-apply');
+  if (presetSelect && window.AZPresets) AZPresets.hydrateSelect(presetSelect);
+  if (presetApply) {
+    presetApply.addEventListener('click', () => {
+      const id = presetSelect ? presetSelect.value : '';
+      if (!id) { flashErr('Pick a preset first'); return; }
+      const mode = confirm('Merge preset into current data?\nOK = merge · Cancel = replace all planner data')
+        ? 'merge' : 'replace';
+      if (mode === 'replace' && !confirm('Really replace all goals, habits and this month\'s plan?')) return;
+      const res = AZPresets.apply(id, mode);
+      if (res.ok) {
+        hydrateSettings();
+        flashOk(`Preset applied · ${res.applied.goals} goals · ${res.applied.habits} habits`);
+      } else {
+        flashErr(res.error || 'Preset failed');
+      }
+    });
   }
 
   // ------- Backup / Restore -------
