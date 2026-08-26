@@ -2,11 +2,10 @@
 """AZOUMAG Planner — single-file bundler.
 
 Reads index.html, inlines css/style.css and every js/*.js referenced
-by a <script src>, and writes two outputs into dist/:
+by a <script src>, and writes one output:
 
-  dist/planner.html        — full standalone HTML (host anywhere)
-  dist/planner-embed.html  — fragment (style + #az-planner + scripts)
-                             for pasting into YouCan / WordPress / Shopify
+  dist/planner.html — full standalone HTML with <!DOCTYPE>. Drop into
+                      a YouCan / WordPress / Shopify custom-HTML page.
 
 No dependencies. Run with:  python build.py
 """
@@ -42,21 +41,6 @@ def inline_js(html):
     return SCRIPT_RE.sub(repl, html)
 
 
-def extract_embed(html):
-    """Pull out <style>, #az-planner div, and <script> blocks only."""
-    style = re.search(r'<style>[\s\S]*?</style>', html)
-    planner = re.search(r'<div id="az-planner">[\s\S]*?</div>\s*(?=<script|</body>)', html)
-    scripts = re.findall(r'<script>[\s\S]*?</script>', html)
-    if not (style and planner and scripts):
-        raise RuntimeError('Could not extract embed parts')
-    return (
-        '<!-- AZOUMAG Planner — embed fragment. Paste inside a YouCan / WordPress / Shopify custom-HTML block. -->\n'
-        + style.group(0) + '\n'
-        + planner.group(0).rstrip() + '\n'
-        + '\n'.join(scripts) + '\n'
-    )
-
-
 def main():
     src = read('index.html')
     bundled = inline_js(inline_css(src))
@@ -67,13 +51,8 @@ def main():
     with open(standalone_path, 'w', encoding='utf-8') as f:
         f.write(bundled)
 
-    embed_path = os.path.join(DIST, 'planner-embed.html')
-    with open(embed_path, 'w', encoding='utf-8') as f:
-        f.write(extract_embed(bundled))
-
-    for p in (standalone_path, embed_path):
-        size_kb = os.path.getsize(p) / 1024
-        print(f'  {os.path.relpath(p, ROOT):<28} {size_kb:7.1f} KB')
+    size_kb = os.path.getsize(standalone_path) / 1024
+    print(f'  {os.path.relpath(standalone_path, ROOT):<28} {size_kb:7.1f} KB')
 
 
 if __name__ == '__main__':
