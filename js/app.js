@@ -75,7 +75,13 @@
       const s = AZStorage.getSettings();
       s.plannerName = setShop ? setShop.value.trim() || 'Your Planner' : s.plannerName;
       s.year = setYear ? parseInt(setYear.value, 10) || s.year : s.year;
-      s.theme = setTheme ? setTheme.value : s.theme;
+      const chosenTheme = setTheme ? setTheme.value : s.theme;
+      if (window.AZThemes && AZThemes.isLocked(chosenTheme)) {
+        flashErr('That theme is Pro — activate a key to unlock it');
+        setTheme.value = s.theme || 'base';
+        return;
+      }
+      s.theme = chosenTheme;
       AZStorage.saveSettings(s);
       hydrateSettings();
       flashOk('Settings saved');
@@ -190,6 +196,76 @@
     });
   }
 
+  // ------- License -------
+  const licStatus = $('#az-license-status');
+  const licInput = $('#az-license-input');
+  const licActivateBtn = $('#az-license-activate');
+  const licActivateRow = $('#az-license-activate-row');
+  const licDeactivateRow = $('#az-license-deactivate-row');
+  const licDeactivateBtn = $('#az-license-deactivate');
+
+  function hydrateLicense() {
+    if (!window.AZLicense) return;
+    const rec = AZLicense.getRecord();
+    const pro = AZLicense.isPro();
+    if (licStatus) {
+      if (pro && rec) {
+        const when = new Date(rec.activatedAt).toLocaleDateString();
+        licStatus.textContent = `Status: Pro · activated ${when} · key ends ${rec.key.slice(-8)}`;
+      } else {
+        licStatus.textContent = 'Status: Free';
+      }
+    }
+    if (licActivateRow)   licActivateRow.hidden   = pro;
+    if (licDeactivateRow) licDeactivateRow.hidden = !pro;
+
+    // If the stored theme is now Pro-locked, fall back to base cleanly
+    if (window.AZThemes && window.AZStorage) {
+      const s = AZStorage.getSettings();
+      if (AZThemes.isLocked(s.theme)) {
+        s.theme = 'base';
+        AZStorage.saveSettings(s);
+        AZThemes.apply('base');
+        if (setTheme) setTheme.value = 'base';
+      }
+    }
+
+    if (setTheme && window.AZThemes) {
+      const cur = setTheme.value;
+      AZThemes.hydrateSelect(setTheme);
+      if (cur) setTheme.value = cur;
+    }
+    if (presetSelect && window.AZPresets) AZPresets.hydrateSelect(presetSelect);
+  }
+
+  if (licActivateBtn) {
+    licActivateBtn.addEventListener('click', async () => {
+      const key = licInput ? licInput.value.trim() : '';
+      if (!key) { flashErr('Paste a license key first'); return; }
+      licActivateBtn.disabled = true;
+      const res = await AZLicense.activate(key);
+      licActivateBtn.disabled = false;
+      if (res.ok) {
+        if (licInput) licInput.value = '';
+        flashOk('Pro unlocked · thanks for supporting AZOUMAG');
+      } else {
+        flashErr(res.error || 'Activation failed');
+      }
+    });
+  }
+
+  if (licDeactivateBtn) {
+    licDeactivateBtn.addEventListener('click', () => {
+      if (!confirm('Deactivate Pro on this device?')) return;
+      AZLicense.deactivate();
+      flashOk('License deactivated');
+    });
+  }
+
+  document.addEventListener('az-license-changed', hydrateLicense);
+
+  if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
+
   // ------- Version tag -------
   const versionEl = $('#az-version');
   if (versionEl && window.AZ_PLANNER_VERSION) versionEl.textContent = 'v' + window.AZ_PLANNER_VERSION;
@@ -197,4 +273,5 @@
   // ------- Init -------
   hydrateSettings();
   hydrateBackupInfo();
+  hydrateLicense();
 })();

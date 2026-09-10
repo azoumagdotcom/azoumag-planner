@@ -46,6 +46,7 @@
     'focus-reset': {
       label: 'Focus Reset — 90-day mental clarity sprint',
       theme: 'focus-reset',
+      pro: true,
       goals: [
         { goal: 'Complete a 90-day mental reset', category: 'Personal', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'In Progress', successMetric: 'No dopamine-crash apps for 90 days', nextAction: 'Delete distraction apps tonight', progress: 0.05 },
         { goal: 'Read 6 books this quarter', category: 'Learning', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: '6 finished books', nextAction: 'Pick book #1', progress: 0 },
@@ -67,6 +68,7 @@
     'student': {
       label: 'Student — semester ops',
       theme: 'base',
+      pro: true,
       goals: [
         { goal: 'Pass all courses with distinction', category: 'Learning', quarter: 'Year', status: 'In Progress', successMetric: 'Average > 15/20', nextAction: 'Plan revision schedule', progress: 0.2 },
         { goal: 'Complete one side project', category: 'Career', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: 'Deployed and shared', nextAction: 'Choose the project', progress: 0 },
@@ -84,22 +86,35 @@
     },
   };
 
+  const isPro = () => !!(window.AZLicense && window.AZLicense.isPro());
+
   const AZPresets = {
     list() {
-      return Object.keys(PRESETS).map(id => ({ id, label: PRESETS[id].label, theme: PRESETS[id].theme }));
+      return Object.keys(PRESETS).map(id => ({
+        id, label: PRESETS[id].label, theme: PRESETS[id].theme, pro: !!PRESETS[id].pro,
+      }));
     },
 
     get(id) { return PRESETS[id]; },
 
+    isLocked(id) {
+      return !!(PRESETS[id] && PRESETS[id].pro && !isPro());
+    },
+
     hydrateSelect(selectEl) {
       if (!selectEl) return;
+      const pro = isPro();
       selectEl.innerHTML = '<option value="">— pick a preset —</option>' +
-        this.list().map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+        this.list().map(p => {
+          const lock = p.pro && !pro ? ' 🔒' : '';
+          return `<option value="${p.id}">${p.label}${lock}</option>`;
+        }).join('');
     },
 
     apply(id, mode) {
       const p = PRESETS[id];
       if (!p) return { ok: false, error: 'Unknown preset' };
+      if (this.isLocked(id)) return { ok: false, error: 'Pro required for this preset' };
       mode = mode || 'merge'; // 'merge' | 'replace'
 
       // Goals

@@ -379,6 +379,23 @@
           </div>
         </div>
 
+        <div class="az-form">
+          <h3>License</h3>
+          <p class="az-muted">Free tier includes the planner core. Unlock extra themes and presets with a Pro key. <span id="az-license-status">Status: Free</span></p>
+          <div class="az-form-row" id="az-license-activate-row">
+            <label style="flex:3 1 260px;">
+              <span>License key</span>
+              <input type="text" id="az-license-input" placeholder="AZOUMAG-PRO-XXXXXXXX-XXXXXXXXXXXX" autocomplete="off" spellcheck="false" />
+            </label>
+            <div style="align-self:flex-end;">
+              <button type="button" class="az-btn az-btn-primary" id="az-license-activate">Activate</button>
+            </div>
+          </div>
+          <div class="az-form-actions" id="az-license-deactivate-row" hidden>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-license-deactivate">Deactivate license</button>
+          </div>
+        </div>
+
         <div class="az-form az-backup">
           <h3>Backup &amp; Restore</h3>
           <div class="az-backup-info" id="az-backup-info">Last backup: never</div>
@@ -419,6 +436,7 @@
   </div>
 
   <script src="js/storage.js"></script>
+  <script src="js/license.js"></script>
   <script src="js/welcome.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/year-goals.js"></script>

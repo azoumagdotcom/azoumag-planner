@@ -10,6 +10,10 @@ Desktop.ini
 *.swo
 *~
 
+# Python
+__pycache__/
+*.pyc
+
 # Local dev
 node_modules/
 .env

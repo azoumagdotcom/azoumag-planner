@@ -900,6 +900,23 @@
           </div>
         </div>
 
+        <div class="az-form">
+          <h3>License</h3>
+          <p class="az-muted">Free tier includes the planner core. Unlock extra themes and presets with a Pro key. <span id="az-license-status">Status: Free</span></p>
+          <div class="az-form-row" id="az-license-activate-row">
+            <label style="flex:3 1 260px;">
+              <span>License key</span>
+              <input type="text" id="az-license-input" placeholder="AZOUMAG-PRO-XXXXXXXX-XXXXXXXXXXXX" autocomplete="off" spellcheck="false" />
+            </label>
+            <div style="align-self:flex-end;">
+              <button type="button" class="az-btn az-btn-primary" id="az-license-activate">Activate</button>
+            </div>
+          </div>
+          <div class="az-form-actions" id="az-license-deactivate-row" hidden>
+            <button type="button" class="az-btn az-btn-ghost az-btn-sm" id="az-license-deactivate">Deactivate license</button>
+          </div>
+        </div>
+
         <div class="az-form az-backup">
           <h3>Backup &amp; Restore</h3>
           <div class="az-backup-info" id="az-backup-info">Last backup: never</div>
@@ -956,6 +973,7 @@
     daily:      'az_planner_daily',
     notes:      'az_planner_notes',
     brainDump:  'az_planner_brain_dump',
+    license:    'az_planner_license',
     meta:       'az_planner_meta',
   };
 
@@ -1047,6 +1065,7 @@
           daily:     this.getDaily(),
           notes:     this.getNotes(),
           brainDump: this.getBrainDump(),
+          license:   read(K.license, null),
         },
       };
     },
@@ -1073,6 +1092,7 @@
         if (d.daily)     this.saveDaily(d.daily);
         if (d.notes)     this.saveNotes(d.notes);
         if (d.brainDump) this.saveBrainDump(d.brainDump);
+        if (d.license)   write(K.license, d.license);
       } else if (mode === 'merge') {
         if (Array.isArray(d.yearGoals)) this.saveYearGoals([...this.getYearGoals(), ...d.yearGoals]);
         if (Array.isArray(d.habits))    this.saveHabits([...this.getHabits(), ...d.habits]);
@@ -1099,6 +1119,80 @@
 
   global.AZStorage = AZStorage;
   global.AZ_PLANNER_VERSION = '0.1.0';
+})(window);
+
+</script>
+  <script>
+/* AZOUMAG Planner — License keys (offline HMAC-SHA256 verification) */
+/* ponytail: secret is embedded — crackable by anyone reading the source.
+   Acceptable for BSL honor-system gating. Upgrade to server verification
+   when there's paid revenue to justify it. */
+(function (global) {
+  'use strict';
+
+  const SECRET = 'azoumag-planner-v1-2026-secret';
+  const STORAGE_KEY = 'az_planner_license';
+  const KEY_RE = /^AZOUMAG-PRO-([A-Z0-9]{8})-([a-f0-9]{12})$/;
+
+  async function hmacHex(msg) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw', enc.encode(SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false, ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg));
+    return Array.from(new Uint8Array(sig))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function verify(rawKey) {
+    if (typeof rawKey !== 'string') return false;
+    const key = rawKey.trim().toUpperCase().replace(/^AZOUMAG-PRO-/, 'AZOUMAG-PRO-');
+    const m = key.match(/^AZOUMAG-PRO-([A-Z0-9]{8})-([A-F0-9]{12})$/i);
+    if (!m) return false;
+    const [, id, sig] = m;
+    const expected = (await hmacHex('PRO:' + id)).slice(0, 12);
+    return sig.toLowerCase() === expected;
+  }
+
+  function readStored() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; }
+    catch (e) { return null; }
+  }
+
+  const AZLicense = {
+    async activate(rawKey) {
+      const ok = await verify(rawKey);
+      if (!ok) return { ok: false, error: 'Invalid license key' };
+      const record = {
+        key: rawKey.trim().toUpperCase(),
+        tier: 'pro',
+        activatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+      document.dispatchEvent(new CustomEvent('az-license-changed'));
+      return { ok: true, tier: 'pro' };
+    },
+
+    deactivate() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.dispatchEvent(new CustomEvent('az-license-changed'));
+    },
+
+    getRecord() { return readStored(); },
+    getTier() { return (readStored() || {}).tier || 'free'; },
+    isPro() { return this.getTier() === 'pro'; },
+
+    async revalidate() {
+      const rec = readStored();
+      if (!rec || !rec.key) return;
+      const ok = await verify(rec.key);
+      if (!ok) this.deactivate();
+    },
+  };
+
+  global.AZLicense = AZLicense;
 })(window);
 
 </script>
@@ -2330,6 +2424,7 @@
     },
     'midnight': {
       label: 'Midnight — pure dark, cool blue',
+      pro: true,
       vars: {
         '--az-orange':      '#6EA8FE',
         '--az-orange-soft': '#8FBBFE',
@@ -2341,6 +2436,7 @@
     },
     'warm-paper': {
       label: 'Warm Paper — cream + terracotta',
+      pro: true,
       vars: {
         '--az-orange':      '#B8532A',
         '--az-orange-soft': '#D07446',
@@ -2352,6 +2448,7 @@
     },
     'mono': {
       label: 'Mono — distraction-free grayscale',
+      pro: true,
       vars: {
         '--az-orange':      '#4A4A4A',
         '--az-orange-soft': '#6A6A6A',
@@ -2363,29 +2460,43 @@
     },
   };
 
+  const isPro = () => !!(window.AZLicense && window.AZLicense.isPro());
+
   const AZThemes = {
     list() {
-      return Object.keys(THEMES).map(id => ({ id, label: THEMES[id].label }));
+      return Object.keys(THEMES).map(id => ({
+        id, label: THEMES[id].label, pro: !!THEMES[id].pro,
+      }));
+    },
+
+    isLocked(name) {
+      return !!(THEMES[name] && THEMES[name].pro && !isPro());
     },
 
     apply(name) {
       const root = document.getElementById('az-planner');
-      if (!root) return;
+      if (!root) return { ok: false, error: 'root-missing' };
+      if (this.isLocked(name)) {
+        this.apply('base');
+        return { ok: false, error: 'pro-required' };
+      }
       const t = THEMES[name] || THEMES.base;
-      // Wipe any previously-set var, then apply new
-      Object.keys(THEMES.base.vars || {}).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES['focus-reset'].vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES.midnight.vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES['warm-paper'].vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES.mono.vars).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES).forEach(id => {
+        Object.keys(THEMES[id].vars || {}).forEach(k => root.style.removeProperty(k));
+      });
       Object.entries(t.vars || {}).forEach(([k, v]) => root.style.setProperty(k, v));
       root.setAttribute('data-theme', name);
+      return { ok: true };
     },
 
     hydrateSelect(selectEl) {
       if (!selectEl) return;
       const cur = selectEl.value;
-      selectEl.innerHTML = this.list().map(t => `<option value="${t.id}">${t.label}</option>`).join('');
+      const pro = isPro();
+      selectEl.innerHTML = this.list().map(t => {
+        const lock = t.pro && !pro ? ' 🔒' : '';
+        return `<option value="${t.id}">${t.label}${lock}</option>`;
+      }).join('');
       if (cur && THEMES[cur]) selectEl.value = cur;
     },
   };
@@ -2443,6 +2554,7 @@
     'focus-reset': {
       label: 'Focus Reset — 90-day mental clarity sprint',
       theme: 'focus-reset',
+      pro: true,
       goals: [
         { goal: 'Complete a 90-day mental reset', category: 'Personal', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'In Progress', successMetric: 'No dopamine-crash apps for 90 days', nextAction: 'Delete distraction apps tonight', progress: 0.05 },
         { goal: 'Read 6 books this quarter', category: 'Learning', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: '6 finished books', nextAction: 'Pick book #1', progress: 0 },
@@ -2464,6 +2576,7 @@
     'student': {
       label: 'Student — semester ops',
       theme: 'base',
+      pro: true,
       goals: [
         { goal: 'Pass all courses with distinction', category: 'Learning', quarter: 'Year', status: 'In Progress', successMetric: 'Average > 15/20', nextAction: 'Plan revision schedule', progress: 0.2 },
         { goal: 'Complete one side project', category: 'Career', quarter: 'Q' + (Math.floor(new Date().getMonth() / 3) + 1), status: 'Not Started', successMetric: 'Deployed and shared', nextAction: 'Choose the project', progress: 0 },
@@ -2481,22 +2594,35 @@
     },
   };
 
+  const isPro = () => !!(window.AZLicense && window.AZLicense.isPro());
+
   const AZPresets = {
     list() {
-      return Object.keys(PRESETS).map(id => ({ id, label: PRESETS[id].label, theme: PRESETS[id].theme }));
+      return Object.keys(PRESETS).map(id => ({
+        id, label: PRESETS[id].label, theme: PRESETS[id].theme, pro: !!PRESETS[id].pro,
+      }));
     },
 
     get(id) { return PRESETS[id]; },
 
+    isLocked(id) {
+      return !!(PRESETS[id] && PRESETS[id].pro && !isPro());
+    },
+
     hydrateSelect(selectEl) {
       if (!selectEl) return;
+      const pro = isPro();
       selectEl.innerHTML = '<option value="">— pick a preset —</option>' +
-        this.list().map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+        this.list().map(p => {
+          const lock = p.pro && !pro ? ' 🔒' : '';
+          return `<option value="${p.id}">${p.label}${lock}</option>`;
+        }).join('');
     },
 
     apply(id, mode) {
       const p = PRESETS[id];
       if (!p) return { ok: false, error: 'Unknown preset' };
+      if (this.isLocked(id)) return { ok: false, error: 'Pro required for this preset' };
       mode = mode || 'merge'; // 'merge' | 'replace'
 
       // Goals
@@ -2617,7 +2743,13 @@
       const s = AZStorage.getSettings();
       s.plannerName = setShop ? setShop.value.trim() || 'Your Planner' : s.plannerName;
       s.year = setYear ? parseInt(setYear.value, 10) || s.year : s.year;
-      s.theme = setTheme ? setTheme.value : s.theme;
+      const chosenTheme = setTheme ? setTheme.value : s.theme;
+      if (window.AZThemes && AZThemes.isLocked(chosenTheme)) {
+        flashErr('That theme is Pro — activate a key to unlock it');
+        setTheme.value = s.theme || 'base';
+        return;
+      }
+      s.theme = chosenTheme;
       AZStorage.saveSettings(s);
       hydrateSettings();
       flashOk('Settings saved');
@@ -2732,6 +2864,76 @@
     });
   }
 
+  // ------- License -------
+  const licStatus = $('#az-license-status');
+  const licInput = $('#az-license-input');
+  const licActivateBtn = $('#az-license-activate');
+  const licActivateRow = $('#az-license-activate-row');
+  const licDeactivateRow = $('#az-license-deactivate-row');
+  const licDeactivateBtn = $('#az-license-deactivate');
+
+  function hydrateLicense() {
+    if (!window.AZLicense) return;
+    const rec = AZLicense.getRecord();
+    const pro = AZLicense.isPro();
+    if (licStatus) {
+      if (pro && rec) {
+        const when = new Date(rec.activatedAt).toLocaleDateString();
+        licStatus.textContent = `Status: Pro · activated ${when} · key ends ${rec.key.slice(-8)}`;
+      } else {
+        licStatus.textContent = 'Status: Free';
+      }
+    }
+    if (licActivateRow)   licActivateRow.hidden   = pro;
+    if (licDeactivateRow) licDeactivateRow.hidden = !pro;
+
+    // If the stored theme is now Pro-locked, fall back to base cleanly
+    if (window.AZThemes && window.AZStorage) {
+      const s = AZStorage.getSettings();
+      if (AZThemes.isLocked(s.theme)) {
+        s.theme = 'base';
+        AZStorage.saveSettings(s);
+        AZThemes.apply('base');
+        if (setTheme) setTheme.value = 'base';
+      }
+    }
+
+    if (setTheme && window.AZThemes) {
+      const cur = setTheme.value;
+      AZThemes.hydrateSelect(setTheme);
+      if (cur) setTheme.value = cur;
+    }
+    if (presetSelect && window.AZPresets) AZPresets.hydrateSelect(presetSelect);
+  }
+
+  if (licActivateBtn) {
+    licActivateBtn.addEventListener('click', async () => {
+      const key = licInput ? licInput.value.trim() : '';
+      if (!key) { flashErr('Paste a license key first'); return; }
+      licActivateBtn.disabled = true;
+      const res = await AZLicense.activate(key);
+      licActivateBtn.disabled = false;
+      if (res.ok) {
+        if (licInput) licInput.value = '';
+        flashOk('Pro unlocked · thanks for supporting AZOUMAG');
+      } else {
+        flashErr(res.error || 'Activation failed');
+      }
+    });
+  }
+
+  if (licDeactivateBtn) {
+    licDeactivateBtn.addEventListener('click', () => {
+      if (!confirm('Deactivate Pro on this device?')) return;
+      AZLicense.deactivate();
+      flashOk('License deactivated');
+    });
+  }
+
+  document.addEventListener('az-license-changed', hydrateLicense);
+
+  if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
+
   // ------- Version tag -------
   const versionEl = $('#az-version');
   if (versionEl && window.AZ_PLANNER_VERSION) versionEl.textContent = 'v' + window.AZ_PLANNER_VERSION;
@@ -2739,6 +2941,7 @@
   // ------- Init -------
   hydrateSettings();
   hydrateBackupInfo();
+  hydrateLicense();
 })();
 
 </script>

@@ -20,6 +20,7 @@
     },
     'midnight': {
       label: 'Midnight — pure dark, cool blue',
+      pro: true,
       vars: {
         '--az-orange':      '#6EA8FE',
         '--az-orange-soft': '#8FBBFE',
@@ -31,6 +32,7 @@
     },
     'warm-paper': {
       label: 'Warm Paper — cream + terracotta',
+      pro: true,
       vars: {
         '--az-orange':      '#B8532A',
         '--az-orange-soft': '#D07446',
@@ -42,6 +44,7 @@
     },
     'mono': {
       label: 'Mono — distraction-free grayscale',
+      pro: true,
       vars: {
         '--az-orange':      '#4A4A4A',
         '--az-orange-soft': '#6A6A6A',
@@ -53,29 +56,43 @@
     },
   };
 
+  const isPro = () => !!(window.AZLicense && window.AZLicense.isPro());
+
   const AZThemes = {
     list() {
-      return Object.keys(THEMES).map(id => ({ id, label: THEMES[id].label }));
+      return Object.keys(THEMES).map(id => ({
+        id, label: THEMES[id].label, pro: !!THEMES[id].pro,
+      }));
+    },
+
+    isLocked(name) {
+      return !!(THEMES[name] && THEMES[name].pro && !isPro());
     },
 
     apply(name) {
       const root = document.getElementById('az-planner');
-      if (!root) return;
+      if (!root) return { ok: false, error: 'root-missing' };
+      if (this.isLocked(name)) {
+        this.apply('base');
+        return { ok: false, error: 'pro-required' };
+      }
       const t = THEMES[name] || THEMES.base;
-      // Wipe any previously-set var, then apply new
-      Object.keys(THEMES.base.vars || {}).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES['focus-reset'].vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES.midnight.vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES['warm-paper'].vars).forEach(k => root.style.removeProperty(k));
-      Object.keys(THEMES.mono.vars).forEach(k => root.style.removeProperty(k));
+      Object.keys(THEMES).forEach(id => {
+        Object.keys(THEMES[id].vars || {}).forEach(k => root.style.removeProperty(k));
+      });
       Object.entries(t.vars || {}).forEach(([k, v]) => root.style.setProperty(k, v));
       root.setAttribute('data-theme', name);
+      return { ok: true };
     },
 
     hydrateSelect(selectEl) {
       if (!selectEl) return;
       const cur = selectEl.value;
-      selectEl.innerHTML = this.list().map(t => `<option value="${t.id}">${t.label}</option>`).join('');
+      const pro = isPro();
+      selectEl.innerHTML = this.list().map(t => {
+        const lock = t.pro && !pro ? ' 🔒' : '';
+        return `<option value="${t.id}">${t.label}${lock}</option>`;
+      }).join('');
       if (cur && THEMES[cur]) selectEl.value = cur;
     },
   };

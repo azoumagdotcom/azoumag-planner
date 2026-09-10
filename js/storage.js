@@ -14,6 +14,7 @@
     daily:      'az_planner_daily',
     notes:      'az_planner_notes',
     brainDump:  'az_planner_brain_dump',
+    license:    'az_planner_license',
     meta:       'az_planner_meta',
   };
 
@@ -105,6 +106,7 @@
           daily:     this.getDaily(),
           notes:     this.getNotes(),
           brainDump: this.getBrainDump(),
+          license:   read(K.license, null),
         },
       };
     },
@@ -131,6 +133,7 @@
         if (d.daily)     this.saveDaily(d.daily);
         if (d.notes)     this.saveNotes(d.notes);
         if (d.brainDump) this.saveBrainDump(d.brainDump);
+        if (d.license)   write(K.license, d.license);
       } else if (mode === 'merge') {
         if (Array.isArray(d.yearGoals)) this.saveYearGoals([...this.getYearGoals(), ...d.yearGoals]);
         if (Array.isArray(d.habits))    this.saveHabits([...this.getHabits(), ...d.habits]);
