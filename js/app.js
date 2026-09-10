@@ -38,13 +38,31 @@
     try { localStorage.setItem('az_planner_current_tab', name); } catch (e) {}
     document.dispatchEvent(new CustomEvent('az-view-shown', { detail: { name } }));
   }
-  $$('.az-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  const FIRST_BOOT_KEY = 'az_planner_first_boot_done';
+  const isFirstBoot = !localStorage.getItem(FIRST_BOOT_KEY);
+  const markSeen = () => { try { localStorage.setItem(FIRST_BOOT_KEY, '1'); } catch (e) {} };
 
-  // Restore last tab
-  try {
-    const last = localStorage.getItem('az_planner_current_tab');
-    if (last && $(`#az-view-${last}`)) switchTab(last);
-  } catch (e) {}
+  $$('.az-tab').forEach(t => t.addEventListener('click', () => {
+    switchTab(t.dataset.tab);
+    markSeen();
+  }));
+
+  // First boot → land on Settings so the user sees the license section.
+  // Otherwise restore the last-used tab.
+  if (isFirstBoot) {
+    switchTab('settings');
+    setTimeout(() => {
+      const input = document.getElementById('az-license-input');
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  } else {
+    try {
+      const last = localStorage.getItem('az_planner_current_tab');
+      if (last && $(`#az-view-${last}`)) switchTab(last);
+    } catch (e) {}
+  }
 
   // ------- Today date -------
   const todayEl = $('#az-today');
@@ -263,6 +281,7 @@
   }
 
   document.addEventListener('az-license-changed', hydrateLicense);
+  document.addEventListener('az-license-changed', markSeen);
 
   if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
 

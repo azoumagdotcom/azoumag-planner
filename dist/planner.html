@@ -606,9 +606,15 @@
         <div class="az-view-head"><h2>Dashboard</h2></div>
         <div class="az-grid az-grid-4">
           <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-goals">0</div><div class="az-kpi-label">Total goals</div></div>
-          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-active-goals">0</div><div class="az-kpi-label">Active goals</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-ontrack-goals">0</div><div class="az-kpi-label">On-track goals</div></div>
           <div class="az-kpi"><div class="az-kpi-value" id="az-dash-total-habits">0</div><div class="az-kpi-label">Habits tracked</div></div>
           <div class="az-kpi"><div class="az-kpi-value" id="az-dash-longest-streak">0</div><div class="az-kpi-label">Longest streak</div></div>
+        </div>
+        <div class="az-grid az-grid-4" style="margin-top:16px;">
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-year-progress">—</div><div class="az-kpi-label">Year progress</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-week-habits">—</div><div class="az-kpi-label">Habits this week</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-30d-habits">—</div><div class="az-kpi-label">Habits last 30d</div></div>
+          <div class="az-kpi"><div class="az-kpi-value" id="az-dash-open-bd">0</div><div class="az-kpi-label">Open brain dumps</div></div>
         </div>
         <div class="az-grid az-grid-2" style="margin-top:24px;">
           <article class="az-card">
@@ -1253,6 +1259,12 @@
     return d.toISOString().slice(0, 10);
   }
 
+  function dayKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return d.toISOString().slice(0, 10);
+  }
+
   function currentStreak(habit) {
     const values = habit.values || {};
     let streak = 0;
@@ -1265,6 +1277,28 @@
     return streak;
   }
 
+  function habitCompletionRate(habits, days) {
+    if (!habits.length || !days) return null;
+    let hits = 0;
+    for (const h of habits) {
+      const v = h.values || {};
+      for (let i = 0; i < days; i++) {
+        if (v[dayKey(i)] === 1) hits++;
+      }
+    }
+    const possible = habits.length * days;
+    return { hits, possible, pct: Math.round((hits / possible) * 100) };
+  }
+
+  function yearProgress() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const end = new Date(now.getFullYear() + 1, 0, 1);
+    const day = Math.floor((now - start) / 86400000) + 1;
+    const total = Math.round((end - start) / 86400000);
+    return { day, total, pct: Math.round((day / total) * 100) };
+  }
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -1275,20 +1309,31 @@
     refresh() {
       const goals = AZStorage.getYearGoals();
       const habits = AZStorage.getHabits();
+      const bd = AZStorage.getBrainDump();
 
-      const totalGoalsEl = document.getElementById('az-dash-total-goals');
-      const activeGoalsEl = document.getElementById('az-dash-active-goals');
-      const totalHabitsEl = document.getElementById('az-dash-total-habits');
-      const longestEl = document.getElementById('az-dash-longest-streak');
-
-      const activeCount = goals.filter(g => g.status === 'In Progress' || g.status === 'Waiting').length;
+      const yp = yearProgress();
+      const yearFrac = yp.day / yp.total;
+      const onTrackCount = goals.filter(g =>
+        g.status !== 'Done' && (g.progress || 0) >= yearFrac
+      ).length;
       const streaks = habits.map(currentStreak);
       const longest = streaks.length ? Math.max.apply(null, streaks) : 0;
+      const week = habitCompletionRate(habits, 7);
+      const month = habitCompletionRate(habits, 30);
+      const openBd = bd.filter(x => !x.done).length;
 
-      if (totalGoalsEl) totalGoalsEl.textContent = goals.length;
-      if (activeGoalsEl) activeGoalsEl.textContent = activeCount;
-      if (totalHabitsEl) totalHabitsEl.textContent = habits.length;
-      if (longestEl) longestEl.textContent = longest;
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      set('az-dash-total-goals', goals.length);
+      set('az-dash-ontrack-goals', onTrackCount);
+      set('az-dash-total-habits', habits.length);
+      set('az-dash-longest-streak', longest);
+      set('az-dash-year-progress', `${yp.day}/${yp.total} · ${yp.pct}%`);
+      set('az-dash-week-habits', week ? `${week.hits}/${week.possible} · ${week.pct}%` : '—');
+      set('az-dash-30d-habits', month ? `${month.hits}/${month.possible} · ${month.pct}%` : '—');
+      set('az-dash-open-bd', openBd);
 
       // Top goals by progress (top 3, exclude done)
       const topBox = document.getElementById('az-dash-top-goals');
@@ -2706,13 +2751,31 @@
     try { localStorage.setItem('az_planner_current_tab', name); } catch (e) {}
     document.dispatchEvent(new CustomEvent('az-view-shown', { detail: { name } }));
   }
-  $$('.az-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  const FIRST_BOOT_KEY = 'az_planner_first_boot_done';
+  const isFirstBoot = !localStorage.getItem(FIRST_BOOT_KEY);
+  const markSeen = () => { try { localStorage.setItem(FIRST_BOOT_KEY, '1'); } catch (e) {} };
 
-  // Restore last tab
-  try {
-    const last = localStorage.getItem('az_planner_current_tab');
-    if (last && $(`#az-view-${last}`)) switchTab(last);
-  } catch (e) {}
+  $$('.az-tab').forEach(t => t.addEventListener('click', () => {
+    switchTab(t.dataset.tab);
+    markSeen();
+  }));
+
+  // First boot → land on Settings so the user sees the license section.
+  // Otherwise restore the last-used tab.
+  if (isFirstBoot) {
+    switchTab('settings');
+    setTimeout(() => {
+      const input = document.getElementById('az-license-input');
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  } else {
+    try {
+      const last = localStorage.getItem('az_planner_current_tab');
+      if (last && $(`#az-view-${last}`)) switchTab(last);
+    } catch (e) {}
+  }
 
   // ------- Today date -------
   const todayEl = $('#az-today');
@@ -2931,6 +2994,7 @@
   }
 
   document.addEventListener('az-license-changed', hydrateLicense);
+  document.addEventListener('az-license-changed', markSeen);
 
   if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
 

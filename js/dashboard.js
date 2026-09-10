@@ -7,6 +7,12 @@
     return d.toISOString().slice(0, 10);
   }
 
+  function dayKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return d.toISOString().slice(0, 10);
+  }
+
   function currentStreak(habit) {
     const values = habit.values || {};
     let streak = 0;
@@ -19,6 +25,28 @@
     return streak;
   }
 
+  function habitCompletionRate(habits, days) {
+    if (!habits.length || !days) return null;
+    let hits = 0;
+    for (const h of habits) {
+      const v = h.values || {};
+      for (let i = 0; i < days; i++) {
+        if (v[dayKey(i)] === 1) hits++;
+      }
+    }
+    const possible = habits.length * days;
+    return { hits, possible, pct: Math.round((hits / possible) * 100) };
+  }
+
+  function yearProgress() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const end = new Date(now.getFullYear() + 1, 0, 1);
+    const day = Math.floor((now - start) / 86400000) + 1;
+    const total = Math.round((end - start) / 86400000);
+    return { day, total, pct: Math.round((day / total) * 100) };
+  }
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -29,20 +57,31 @@
     refresh() {
       const goals = AZStorage.getYearGoals();
       const habits = AZStorage.getHabits();
+      const bd = AZStorage.getBrainDump();
 
-      const totalGoalsEl = document.getElementById('az-dash-total-goals');
-      const activeGoalsEl = document.getElementById('az-dash-active-goals');
-      const totalHabitsEl = document.getElementById('az-dash-total-habits');
-      const longestEl = document.getElementById('az-dash-longest-streak');
-
-      const activeCount = goals.filter(g => g.status === 'In Progress' || g.status === 'Waiting').length;
+      const yp = yearProgress();
+      const yearFrac = yp.day / yp.total;
+      const onTrackCount = goals.filter(g =>
+        g.status !== 'Done' && (g.progress || 0) >= yearFrac
+      ).length;
       const streaks = habits.map(currentStreak);
       const longest = streaks.length ? Math.max.apply(null, streaks) : 0;
+      const week = habitCompletionRate(habits, 7);
+      const month = habitCompletionRate(habits, 30);
+      const openBd = bd.filter(x => !x.done).length;
 
-      if (totalGoalsEl) totalGoalsEl.textContent = goals.length;
-      if (activeGoalsEl) activeGoalsEl.textContent = activeCount;
-      if (totalHabitsEl) totalHabitsEl.textContent = habits.length;
-      if (longestEl) longestEl.textContent = longest;
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      set('az-dash-total-goals', goals.length);
+      set('az-dash-ontrack-goals', onTrackCount);
+      set('az-dash-total-habits', habits.length);
+      set('az-dash-longest-streak', longest);
+      set('az-dash-year-progress', `${yp.day}/${yp.total} · ${yp.pct}%`);
+      set('az-dash-week-habits', week ? `${week.hits}/${week.possible} · ${week.pct}%` : '—');
+      set('az-dash-30d-habits', month ? `${month.hits}/${month.possible} · ${month.pct}%` : '—');
+      set('az-dash-open-bd', openBd);
 
       // Top goals by progress (top 3, exclude done)
       const topBox = document.getElementById('az-dash-top-goals');

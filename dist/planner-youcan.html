@@ -614,9 +614,15 @@
         <div class=&quot;az-view-head&quot;><h2>Dashboard</h2></div>
         <div class=&quot;az-grid az-grid-4&quot;>
           <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-total-goals&quot;>0</div><div class=&quot;az-kpi-label&quot;>Total goals</div></div>
-          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-active-goals&quot;>0</div><div class=&quot;az-kpi-label&quot;>Active goals</div></div>
+          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-ontrack-goals&quot;>0</div><div class=&quot;az-kpi-label&quot;>On-track goals</div></div>
           <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-total-habits&quot;>0</div><div class=&quot;az-kpi-label&quot;>Habits tracked</div></div>
           <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-longest-streak&quot;>0</div><div class=&quot;az-kpi-label&quot;>Longest streak</div></div>
+        </div>
+        <div class=&quot;az-grid az-grid-4&quot; style=&quot;margin-top:16px;&quot;>
+          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-year-progress&quot;>—</div><div class=&quot;az-kpi-label&quot;>Year progress</div></div>
+          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-week-habits&quot;>—</div><div class=&quot;az-kpi-label&quot;>Habits this week</div></div>
+          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-30d-habits&quot;>—</div><div class=&quot;az-kpi-label&quot;>Habits last 30d</div></div>
+          <div class=&quot;az-kpi&quot;><div class=&quot;az-kpi-value&quot; id=&quot;az-dash-open-bd&quot;>0</div><div class=&quot;az-kpi-label&quot;>Open brain dumps</div></div>
         </div>
         <div class=&quot;az-grid az-grid-2&quot; style=&quot;margin-top:24px;&quot;>
           <article class=&quot;az-card&quot;>
@@ -1261,6 +1267,12 @@
     return d.toISOString().slice(0, 10);
   }
 
+  function dayKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return d.toISOString().slice(0, 10);
+  }
+
   function currentStreak(habit) {
     const values = habit.values || {};
     let streak = 0;
@@ -1273,6 +1285,28 @@
     return streak;
   }
 
+  function habitCompletionRate(habits, days) {
+    if (!habits.length || !days) return null;
+    let hits = 0;
+    for (const h of habits) {
+      const v = h.values || {};
+      for (let i = 0; i < days; i++) {
+        if (v[dayKey(i)] === 1) hits++;
+      }
+    }
+    const possible = habits.length * days;
+    return { hits, possible, pct: Math.round((hits / possible) * 100) };
+  }
+
+  function yearProgress() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const end = new Date(now.getFullYear() + 1, 0, 1);
+    const day = Math.floor((now - start) / 86400000) + 1;
+    const total = Math.round((end - start) / 86400000);
+    return { day, total, pct: Math.round((day / total) * 100) };
+  }
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&amp;<>&quot;']/g, c => (
       { '&amp;': '&amp;amp;', '<': '&amp;lt;', '>': '&amp;gt;', '&quot;': '&amp;quot;', &quot;'&quot;: '&amp;#39;' }[c]
@@ -1283,20 +1317,31 @@
     refresh() {
       const goals = AZStorage.getYearGoals();
       const habits = AZStorage.getHabits();
+      const bd = AZStorage.getBrainDump();
 
-      const totalGoalsEl = document.getElementById('az-dash-total-goals');
-      const activeGoalsEl = document.getElementById('az-dash-active-goals');
-      const totalHabitsEl = document.getElementById('az-dash-total-habits');
-      const longestEl = document.getElementById('az-dash-longest-streak');
-
-      const activeCount = goals.filter(g => g.status === 'In Progress' || g.status === 'Waiting').length;
+      const yp = yearProgress();
+      const yearFrac = yp.day / yp.total;
+      const onTrackCount = goals.filter(g =>
+        g.status !== 'Done' &amp;&amp; (g.progress || 0) >= yearFrac
+      ).length;
       const streaks = habits.map(currentStreak);
       const longest = streaks.length ? Math.max.apply(null, streaks) : 0;
+      const week = habitCompletionRate(habits, 7);
+      const month = habitCompletionRate(habits, 30);
+      const openBd = bd.filter(x => !x.done).length;
 
-      if (totalGoalsEl) totalGoalsEl.textContent = goals.length;
-      if (activeGoalsEl) activeGoalsEl.textContent = activeCount;
-      if (totalHabitsEl) totalHabitsEl.textContent = habits.length;
-      if (longestEl) longestEl.textContent = longest;
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      set('az-dash-total-goals', goals.length);
+      set('az-dash-ontrack-goals', onTrackCount);
+      set('az-dash-total-habits', habits.length);
+      set('az-dash-longest-streak', longest);
+      set('az-dash-year-progress', `${yp.day}/${yp.total} · ${yp.pct}%`);
+      set('az-dash-week-habits', week ? `${week.hits}/${week.possible} · ${week.pct}%` : '—');
+      set('az-dash-30d-habits', month ? `${month.hits}/${month.possible} · ${month.pct}%` : '—');
+      set('az-dash-open-bd', openBd);
 
       // Top goals by progress (top 3, exclude done)
       const topBox = document.getElementById('az-dash-top-goals');
@@ -2714,13 +2759,31 @@
     try { localStorage.setItem('az_planner_current_tab', name); } catch (e) {}
     document.dispatchEvent(new CustomEvent('az-view-shown', { detail: { name } }));
   }
-  $$('.az-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  const FIRST_BOOT_KEY = 'az_planner_first_boot_done';
+  const isFirstBoot = !localStorage.getItem(FIRST_BOOT_KEY);
+  const markSeen = () => { try { localStorage.setItem(FIRST_BOOT_KEY, '1'); } catch (e) {} };
 
-  // Restore last tab
-  try {
-    const last = localStorage.getItem('az_planner_current_tab');
-    if (last &amp;&amp; $(`#az-view-${last}`)) switchTab(last);
-  } catch (e) {}
+  $$('.az-tab').forEach(t => t.addEventListener('click', () => {
+    switchTab(t.dataset.tab);
+    markSeen();
+  }));
+
+  // First boot → land on Settings so the user sees the license section.
+  // Otherwise restore the last-used tab.
+  if (isFirstBoot) {
+    switchTab('settings');
+    setTimeout(() => {
+      const input = document.getElementById('az-license-input');
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  } else {
+    try {
+      const last = localStorage.getItem('az_planner_current_tab');
+      if (last &amp;&amp; $(`#az-view-${last}`)) switchTab(last);
+    } catch (e) {}
+  }
 
   // ------- Today date -------
   const todayEl = $('#az-today');
@@ -2939,6 +3002,7 @@
   }
 
   document.addEventListener('az-license-changed', hydrateLicense);
+  document.addEventListener('az-license-changed', markSeen);
 
   if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
 
