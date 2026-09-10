@@ -484,6 +484,78 @@
   font-size: 12px;
 }
 
+/* License gate — full-screen modal on first boot */
+#az-planner .az-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 8, 20, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: az-fade 200ms ease-out;
+}
+#az-planner .az-gate[hidden] { display: none; }
+#az-planner .az-gate-card {
+  width: min(460px, 100%);
+  padding: 28px;
+  background: var(--az-navy-deep);
+  border: 1px solid var(--az-glass-border);
+  border-radius: var(--az-radius-lg);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  color: var(--az-offwhite);
+}
+#az-planner .az-gate-brand {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+#az-planner .az-gate-brand h2 {
+  font-size: 20px;
+  margin: 0 0 6px;
+}
+#az-planner .az-gate-brand p { margin: 0; font-size: 13px; }
+#az-planner .az-gate-field { display: block; margin-bottom: 8px; }
+#az-planner .az-gate-field span {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  opacity: 0.75;
+}
+#az-planner .az-gate-field input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--az-radius);
+  border: 1px solid var(--az-glass-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--az-offwhite);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+#az-planner .az-gate-error {
+  color: #ff7676;
+  font-size: 13px;
+  margin: 4px 0 8px;
+}
+#az-planner .az-gate-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+#az-planner .az-gate-foot {
+  margin: 14px 0 0;
+  font-size: 11px;
+  text-align: center;
+  opacity: 0.55;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   #az-planner .az-header { padding: 16px 20px; }
@@ -504,7 +576,8 @@
   #az-planner .az-header,
   #az-planner .az-tabs,
   #az-planner .az-footer,
-  #az-planner .az-toast { display: none; }
+  #az-planner .az-toast,
+  #az-planner .az-gate { display: none !important; }
   #az-planner .az-view { display: block !important; page-break-after: always; }
   #az-planner[data-print-section] .az-view { display: none !important; page-break-after: auto; }
   #az-planner[data-print-section="monthly"] #az-view-monthly,
@@ -960,6 +1033,28 @@
     </footer>
 
     <div class="az-toast" id="az-toast" role="status" aria-live="polite"></div>
+
+    <div class="az-gate" id="az-license-gate" role="dialog" aria-modal="true" aria-labelledby="az-gate-title" hidden>
+      <div class="az-gate-card">
+        <div class="az-gate-brand">
+          <span class="az-logo" aria-hidden="true">AZ</span>
+          <div>
+            <h2 id="az-gate-title">Activate AZOUMAG Planner</h2>
+            <p class="az-muted">Paste your Pro key to unlock all themes and presets — or continue on the Free tier.</p>
+          </div>
+        </div>
+        <label class="az-gate-field">
+          <span>License key</span>
+          <input type="text" id="az-gate-input" placeholder="AZOUMAG-PRO-XXXXXXXX-XXXXXXXXXXXX" autocomplete="off" spellcheck="false" />
+        </label>
+        <div id="az-gate-error" class="az-gate-error" hidden></div>
+        <div class="az-gate-actions">
+          <button type="button" class="az-btn az-btn-ghost" id="az-gate-skip">Continue with Free</button>
+          <button type="button" class="az-btn az-btn-primary" id="az-gate-activate">Activate Pro</button>
+        </div>
+        <p class="az-muted az-gate-foot">You can activate later from Settings · License. This screen shows once per device.</p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -2760,22 +2855,10 @@
     markSeen();
   }));
 
-  // First boot → land on Settings so the user sees the license section.
-  // Otherwise restore the last-used tab.
-  if (isFirstBoot) {
-    switchTab('settings');
-    setTimeout(() => {
-      const input = document.getElementById('az-license-input');
-      if (input) {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 120);
-  } else {
-    try {
-      const last = localStorage.getItem('az_planner_current_tab');
-      if (last && $(`#az-view-${last}`)) switchTab(last);
-    } catch (e) {}
-  }
+  try {
+    const last = localStorage.getItem('az_planner_current_tab');
+    if (last && $(`#az-view-${last}`)) switchTab(last);
+  } catch (e) {}
 
   // ------- Today date -------
   const todayEl = $('#az-today');
@@ -2997,6 +3080,57 @@
   document.addEventListener('az-license-changed', markSeen);
 
   if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
+
+  // ------- First-boot license gate (modal) -------
+  const gate = $('#az-license-gate');
+  const gateInput = $('#az-gate-input');
+  const gateActivate = $('#az-gate-activate');
+  const gateSkip = $('#az-gate-skip');
+  const gateError = $('#az-gate-error');
+
+  function showGateError(msg) {
+    if (!gateError) return;
+    gateError.textContent = msg;
+    gateError.hidden = false;
+  }
+  function clearGateError() {
+    if (!gateError) return;
+    gateError.hidden = true;
+    gateError.textContent = '';
+  }
+  function closeGate() {
+    if (gate) gate.hidden = true;
+    markSeen();
+  }
+
+  if (gate && isFirstBoot) {
+    gate.hidden = false;
+    setTimeout(() => { if (gateInput) gateInput.focus(); }, 200);
+  }
+
+  if (gateActivate) {
+    gateActivate.addEventListener('click', async () => {
+      clearGateError();
+      const key = gateInput ? gateInput.value.trim() : '';
+      if (!key) { showGateError('Paste a license key first'); return; }
+      if (!window.AZLicense) { showGateError('License module unavailable'); return; }
+      gateActivate.disabled = true;
+      const res = await AZLicense.activate(key);
+      gateActivate.disabled = false;
+      if (res.ok) {
+        closeGate();
+        flashOk('Pro unlocked · thanks for supporting AZOUMAG');
+      } else {
+        showGateError(res.error || 'Invalid license key');
+      }
+    });
+  }
+
+  if (gateSkip) {
+    gateSkip.addEventListener('click', () => {
+      closeGate();
+    });
+  }
 
   // ------- Version tag -------
   const versionEl = $('#az-version');

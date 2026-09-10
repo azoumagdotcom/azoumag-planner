@@ -47,22 +47,10 @@
     markSeen();
   }));
 
-  // First boot → land on Settings so the user sees the license section.
-  // Otherwise restore the last-used tab.
-  if (isFirstBoot) {
-    switchTab('settings');
-    setTimeout(() => {
-      const input = document.getElementById('az-license-input');
-      if (input) {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 120);
-  } else {
-    try {
-      const last = localStorage.getItem('az_planner_current_tab');
-      if (last && $(`#az-view-${last}`)) switchTab(last);
-    } catch (e) {}
-  }
+  try {
+    const last = localStorage.getItem('az_planner_current_tab');
+    if (last && $(`#az-view-${last}`)) switchTab(last);
+  } catch (e) {}
 
   // ------- Today date -------
   const todayEl = $('#az-today');
@@ -284,6 +272,57 @@
   document.addEventListener('az-license-changed', markSeen);
 
   if (window.AZLicense) AZLicense.revalidate().then(hydrateLicense);
+
+  // ------- First-boot license gate (modal) -------
+  const gate = $('#az-license-gate');
+  const gateInput = $('#az-gate-input');
+  const gateActivate = $('#az-gate-activate');
+  const gateSkip = $('#az-gate-skip');
+  const gateError = $('#az-gate-error');
+
+  function showGateError(msg) {
+    if (!gateError) return;
+    gateError.textContent = msg;
+    gateError.hidden = false;
+  }
+  function clearGateError() {
+    if (!gateError) return;
+    gateError.hidden = true;
+    gateError.textContent = '';
+  }
+  function closeGate() {
+    if (gate) gate.hidden = true;
+    markSeen();
+  }
+
+  if (gate && isFirstBoot) {
+    gate.hidden = false;
+    setTimeout(() => { if (gateInput) gateInput.focus(); }, 200);
+  }
+
+  if (gateActivate) {
+    gateActivate.addEventListener('click', async () => {
+      clearGateError();
+      const key = gateInput ? gateInput.value.trim() : '';
+      if (!key) { showGateError('Paste a license key first'); return; }
+      if (!window.AZLicense) { showGateError('License module unavailable'); return; }
+      gateActivate.disabled = true;
+      const res = await AZLicense.activate(key);
+      gateActivate.disabled = false;
+      if (res.ok) {
+        closeGate();
+        flashOk('Pro unlocked · thanks for supporting AZOUMAG');
+      } else {
+        showGateError(res.error || 'Invalid license key');
+      }
+    });
+  }
+
+  if (gateSkip) {
+    gateSkip.addEventListener('click', () => {
+      closeGate();
+    });
+  }
 
   // ------- Version tag -------
   const versionEl = $('#az-version');

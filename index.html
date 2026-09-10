@@ -439,6 +439,28 @@
     </footer>
 
     <div class="az-toast" id="az-toast" role="status" aria-live="polite"></div>
+
+    <div class="az-gate" id="az-license-gate" role="dialog" aria-modal="true" aria-labelledby="az-gate-title" hidden>
+      <div class="az-gate-card">
+        <div class="az-gate-brand">
+          <span class="az-logo" aria-hidden="true">AZ</span>
+          <div>
+            <h2 id="az-gate-title">Activate AZOUMAG Planner</h2>
+            <p class="az-muted">Paste your Pro key to unlock all themes and presets — or continue on the Free tier.</p>
+          </div>
+        </div>
+        <label class="az-gate-field">
+          <span>License key</span>
+          <input type="text" id="az-gate-input" placeholder="AZOUMAG-PRO-XXXXXXXX-XXXXXXXXXXXX" autocomplete="off" spellcheck="false" />
+        </label>
+        <div id="az-gate-error" class="az-gate-error" hidden></div>
+        <div class="az-gate-actions">
+          <button type="button" class="az-btn az-btn-ghost" id="az-gate-skip">Continue with Free</button>
+          <button type="button" class="az-btn az-btn-primary" id="az-gate-activate">Activate Pro</button>
+        </div>
+        <p class="az-muted az-gate-foot">You can activate later from Settings · License. This screen shows once per device.</p>
+      </div>
+    </div>
   </div>
 
   <script src="js/storage.js"></script>
